@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-app
+  labels:
+    app: flask-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flask-app
+  template:
+    metadata:
+      labels:
+        app: flask-app
+    spec:
+      containers:
+      - name: flask-app
+        image: mariuszstubba/flight-app:v1.1.2
+        ports:
+        - containerPort: 5000
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: creds
+              key: username
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: creds
+              key: db
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: creds
+              key: password
+        - name: POSTGRES_HOST
+          value: postgres        # nazwa Service'u Postgresa (sprawdź: kubectl get svc)
+        - name: POSTGRES_PORT
+          value: "5432"
+        - name: FLASK_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: flask-secret
+              key: secret-key
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+      imagePullSecrets:
+      - name: regcred

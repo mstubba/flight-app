@@ -1,0 +1,1 @@
+kubectl create secret generic creds   --from-literal=username=postgres   --from-literal=db=postgres   --from-literal=password=alex1909   --from-literal=host=postgres

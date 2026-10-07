@@ -1,0 +1,3170 @@
+gcloud container clusters get-credentials demo-cluster --zone europe-central2-a --project devops-project-510219
+"#docker run -d -p 5433:5432 -e POSTGRES_PASSWORD=password -t postgres" 
+
+
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    password VARCHAR(50) NOT NULL,
+    email VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE states (
+    id SERIAL PRIMARY KEY,
+    state_code VARCHAR(2) NOT NULL,
+    state_name VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE flights (
+    id SERIAL PRIMARY KEY,
+    departure_state VARCHAR(255) NOT NULL,
+    arrival_state VARCHAR(255) NOT NULL,
+    departure_time TIMESTAMP NOT NULL,
+    arrival_time TIMESTAMP NOT NULL,
+    price DECIMAL(10,2)
+);
+
+
+CREATE TABLE tickets (
+    id SERIAL PRIMARY KEY,
+    ticket_number VARCHAR(50) NOT NULL,
+    departure VARCHAR(50) NOT NULL,
+    arrival VARCHAR(50) NOT NULL,
+    departure_time TIMESTAMP NOT NULL,
+    arrival_time TIMESTAMP NOT NULL,
+    ticket_price DECIMAL(10,2) NOT NULL,
+    users VARCHAR(50) NOT NULL
+);
+
+
+INSERT INTO states (state_code, state_name) VALUES
+('AL', 'Alabama'),
+('AK', 'Alaska'),
+('AZ', 'Arizona'),
+('AR', 'Arkansas'),
+('CA', 'California'),
+('CO', 'Colorado'),
+('CT', 'Connecticut'),
+('DE', 'Delaware'),
+('FL', 'Florida'),
+('GA', 'Georgia'),
+('HI', 'Hawaii'),
+('ID', 'Idaho'),
+('IL', 'Illinois'),
+('IN', 'Indiana'),
+('IA', 'Iowa'),
+('KS', 'Kansas'),
+('KY', 'Kentucky'),
+('LA', 'Louisiana'),
+('ME', 'Maine'),
+('MD', 'Maryland'),
+('MA', 'Massachusetts'),
+('MI', 'Michigan'),
+('MN', 'Minnesota'),
+('MS', 'Mississippi'),
+('MO', 'Missouri'),
+('MT', 'Montana'),
+('NE', 'Nebraska'),
+('NV', 'Nevada'),
+('NH', 'New Hampshire'),
+('NJ', 'New Jersey'),
+('NM', 'New Mexico'),
+('NY', 'New York'),
+('NC', 'North Carolina'),
+('ND', 'North Dakota'),
+('OH', 'Ohio'),
+('OK', 'Oklahoma'),
+('OR', 'Oregon'),
+('PA', 'Pennsylvania'),
+('RI', 'Rhode Island'),
+('SC', 'South Carolina'),
+('SD', 'South Dakota'),
+('TN', 'Tennessee'),
+('TX', 'Texas'),
+('UT', 'Utah'),
+('VT', 'Vermont'),
+('VA', 'Virginia'),
+('WA', 'Washington'),
+('WV', 'West Virginia'),
+('WI', 'Wisconsin'),
+('WY', 'Wyoming');
+
+
+
+
+INSERT INTO flights (departure_state, arrival_state, departure_time, arrival_time, price)
+SELECT s1.state_name, s2.state_name,
+(NOW() + INTERVAL '1 day' * FLOOR(RANDOM() * 30))::DATE + TIME '00:00:00' + INTERVAL '1 hour' * FLOOR(RANDOM() * 24),
+(NOW() + INTERVAL '1 day' * FLOOR(RANDOM() * 30))::DATE + TIME '00:00:00' + INTERVAL '1 hour' * FLOOR(RANDOM() * 24),
+CAST((RANDOM() * 500 + 50) AS NUMERIC(10,2))
+FROM states s1
+CROSS JOIN states s2
+WHERE s1.state_name <> s2.state_name;
+
+
+UPDATE flights
+SET arrival_time = departure_time,
+    departure_time = arrival_time
+WHERE arrival_time < departure_time;
+
+
+
+
+
+--------------------------------------------
+
+Today
+
+
+jak to naprawic
+Najkrócej: Docker Desktop nie działa / nie jest uruchomiony, dlatego wszystkie komendy zwracają błąd „open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified”. To klasyczny objaw, gdy:
+
+Docker Desktop jest wyłączony,
+
+albo jego silnik WSL2 się nie uruchomił,
+
+albo nie masz poprawnie zainstalowanego backendu (WSL2 / Hyper‑V).
+
+Poniżej masz konkretną procedurę naprawczą krok po kroku, zgodnie z Twoim stylem (formalnie, bez emotikonów).
+
+1. Sprawdź, czy Docker Desktop jest uruchomiony
+W Windows Docker musi działać jako aplikacja.
+
+Wciśnij Start → wpisz „Docker Desktop”.
+
+Uruchom aplikację.
+
+Poczekaj, aż w prawym dolnym rogu pojawi się komunikat „Docker is running”.
+
+Jeśli nie startuje → przejdź do punktu 2.
+
+2. Sprawdź, czy działa WSL2 (Docker korzysta z niego domyślnie)
+W PowerShell (uruchom jako Administrator):
+
+Code
+wsl --status
+Powinieneś zobaczyć:
+
+Default Version: 2
+
+Running distributions: Ubuntu (lub inna)
+
+Jeśli masz komunikat o błędzie lub brak dystrybucji:
+
+Instalacja WSL2:
+Code
+wsl --install
+Po instalacji uruchom ponownie komputer.
+
+3. Sprawdź, czy działa backend Docker Desktop
+W PowerShell:
+
+Code
+wsl -l -v
+Powinieneś zobaczyć coś takiego:
+
+Code
+docker-desktop           Running   2
+docker-desktop-data      Running   2
+Jeśli brakuje docker-desktop:
+
+Otwórz Docker Desktop → Settings → Troubleshoot → Reset to factory defaults.
+
+4. Popraw nazwę obrazu (masz literówkę)
+Widziałem w konsoli:
+
+Code
+docker pull postgress
+Powinno być:
+
+Code
+docker pull postgres
+5. Jeśli Docker Desktop nie startuje – włącz wymagane funkcje Windows
+W PowerShell (Admin):
+
+Code
+dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
+dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+Restart systemu.
+
+6. Ostateczna naprawa: reinstalacja Docker Desktop
+Jeśli nic nie działa:
+
+Odinstaluj Docker Desktop.
+
+Usuń katalogi:
+
+C:\Users\<user>\AppData\Local\Docker
+
+C:\Users\<user>\AppData\Roaming\Docker
+
+C:\Users\<user>\AppData\Roaming\Docker Desktop
+
+Zainstaluj najnowszą wersję ze strony Docker.
+
+7. Test po naprawie
+Po uruchomieniu Docker Desktop:
+
+Code
+docker version
+docker info
+docker ps
+docker pull postgres
+Proponuję jedno pytanie kontrolne
+Czy Docker Desktop uruchamia się poprawnie po kliknięciu w ikonę? Jeśli nie, podaj komunikat z okna aplikacji — wtedy dobiorę dokładną procedurę.
+
+
+
+Masz już najważniejszą informację: WSL działa, ale zarówno Ubuntu, jak i docker-desktop są w stanie Stopped.  
+To oznacza, że Docker Desktop nie uruchomił swoich dystrybucji WSL, więc CLI nie ma z czym się połączyć.
+
+Poniżej masz precyzyjną procedurę naprawczą — krok po kroku, bez zbędnych słów.
+
+1. Uruchom Docker Desktop i wymuś start backendu
+Otwórz Docker Desktop.
+
+Poczekaj, aż pojawi się komunikat „Docker is starting”.
+
+Jeśli po chwili nie zmieni się na „Docker is running”, przejdź do:
+Settings → Troubleshoot → Restart Docker Desktop.
+
+Po restarcie sprawdź w PowerShell:
+
+Code
+wsl -l -v
+Oczekiwany wynik:
+
+Code
+docker-desktop        Running   2
+docker-desktop-data   Running   2
+2. Jeśli dystrybucje nadal są „Stopped” – uruchom je ręcznie
+W PowerShell (Administrator):
+
+Code
+wsl --terminate docker-desktop
+wsl --terminate docker-desktop-data
+wsl --unregister docker-desktop
+wsl --unregister docker-desktop-data
+Następnie zamknij i ponownie uruchom Docker Desktop.
+Aplikacja sama utworzy nowe dystrybucje.
+
+Sprawdź ponownie:
+
+Code
+wsl -l -v
+3. Sprawdź, czy WSL2 działa poprawnie
+Code
+wsl --status
+Jeśli Default Version ≠ 2, ustaw:
+
+Code
+wsl --set-default-version 2
+4. Włącz wymagane funkcje Windows (jeśli były wyłączone)
+PowerShell (Administrator):
+
+Code
+dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
+dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+Restart systemu.
+
+5. Po naprawie przetestuj Docker
+Code
+docker version
+docker info
+docker ps
+docker pull postgres
+6. Najczęstsza przyczyna w Twoim przypadku
+Patrząc na zrzut ekranu:
+
+WSL jest zainstalowany i działa.
+
+Dystrybucje Docker Desktop są zainstalowane, ale nie uruchamiają się.
+
+To zwykle oznacza:
+
+Docker Desktop nie został poprawnie uruchomiony,
+
+albo jego backend WSL2 nie wystartował.
+
+Jedno pytanie kontrolne
+Po uruchomieniu Docker Desktop — czy w prawym dolnym rogu pojawia się status „Docker is running”, czy zatrzymuje się na „Docker is starting”?
+
+Od tego zależy kolejny krok diagnostyczny.
+
+czy rolnikiem jest platnik cruz czy mozna miec status rolnika w jakies innej  formie ?
+Najpierw krótka, konkretna odpowiedź:
+Rolnikiem nie jest „płatnik KRUS”.  
+Status rolnika nie wynika z samego opłacania składek, tylko z posiadania lub prowadzenia gospodarstwa rolnego. KRUS jest tylko konsekwencją bycia rolnikiem – nie odwrotnie.
+
+Poniżej masz pełne, uporządkowane wyjaśnienie zgodnie z Twoim stylem.
+
+1. Co to znaczy „być rolnikiem” w świetle prawa
+W Polsce status rolnika wynika z ustawy o ubezpieczeniu społecznym rolników oraz ustawy o kształtowaniu ustroju rolnego (UKUR).
+
+Rolnikiem jest osoba, która:
+
+posiada gospodarstwo rolne (czyli grunty rolne powyżej 1 ha fizycznego lub 1 ha przeliczeniowego),
+albo
+
+prowadzi działalność rolniczą na takich gruntach (nawet jeśli nie jest właścicielem – może być dzierżawcą).
+
+Dopiero wtedy można:
+
+zgłosić się do KRUS,
+
+uzyskać status rolnika indywidualnego (UKUR),
+
+korzystać z uprawnień rolniczych (np. budowa siedliska, zakup ziemi bez zgody KOWR).
+
+2. Czy „płatnik KRUS” = rolnik?
+Nie.
+
+Można płacić KRUS jako:
+
+domownik rolnika,
+
+współmałżonek,
+
+osoba prowadząca dział specjalny produkcji rolnej,
+
+osoba, która ma mały ZUS i spełnia warunki KRUS,
+
+osoba, która ma działki poniżej 1 ha, ale KRUS ją przyjął (zdarza się, ale nie daje to statusu rolnika w UKUR).
+
+KRUS nie nadaje statusu rolnika.
+KRUS tylko ubezpiecza rolników i osoby pracujące w gospodarstwie.
+
+3. Czy można mieć status rolnika „w innej formie”?
+Tak – są trzy różne „statusy rolnika”, które często się mylą:
+
+A) Rolnik w rozumieniu KRUS
+Warunek: prowadzenie działalności rolniczej + zgłoszenie do KRUS.
+To jest status ubezpieczeniowy.
+
+B) Rolnik indywidualny (UKUR)
+Warunek:
+
+min. 1 ha użytków rolnych,
+
+zamieszkanie w gminie min. 5 lat,
+
+osobiste prowadzenie gospodarstwa.
+
+Ten status jest potrzebny np. do zakupu ziemi rolnej powyżej 1 ha bez zgody KOWR.
+
+C) Rolnik w rozumieniu Prawa budowlanego
+Warunek: prowadzenie działalności rolniczej na działce rolnej.
+Ten status jest potrzebny np. do budowy siedliska, budynków gospodarczych, obór, stajni, magazynów.
+
+Tu nie trzeba KRUS.  
+Wystarczy faktyczne prowadzenie działalności rolniczej.
+
+4. Co jest ważne w Twojej sytuacji
+Z Twojej pamięci wynika:
+
+masz działkę rolną w Kazimierzu,
+
+jesteś w trakcie kursu rolniczego,
+
+chcesz uzyskać status rolnika,
+
+chcesz budować obiekt gospodarczy / kontener magazynowy.
+
+Dla Ciebie kluczowe są dwa statusy:
+
+Rolnik w rozumieniu Prawa budowlanego – potrzebny do budynku gospodarczego.
+Tu wystarczy faktyczne prowadzenie działalności rolniczej (np. uprawy, sprzęt, prace polowe).
+
+Rolnik indywidualny (UKUR) – przyda się później, jeśli będziesz kupował ziemię powyżej 1 ha.
+
+KRUS nie jest wymagany do żadnego z tych dwóch celów.
+
+5. Podsumowanie
+Płatnik KRUS ≠ rolnik.
+
+Rolnikiem jest właściciel lub prowadzący gospodarstwo rolne.
+
+Status rolnika można mieć w kilku formach (KRUS, UKUR, Prawo budowlane).
+
+Do budowy na działce rolnej nie musisz być w KRUS – wystarczy faktyczna działalność rolnicza.
+
+Jeśli chcesz, mogę przygotować dla Ciebie najprostszy sposób uzyskania statusu rolnika indywidualnego krok po kroku – zgodnie z Twoją sytuacją w gminie Kosakowo.
+
+popraw literowki "witam , dzisiaj rozmawialen z Pania Elzbieta  Dzedzon  ze starostwa. Otoz zadalem to pytanie czy " obliczenia statyczne czy dodatkowo jakiś opis techniczny lub ekspertyza." sa wymagane. Odpowiedz pani jest taka ze opis techniczny musi wykazac "rozwiązania zapewniające nośność
+i stateczność konstrukcji .. itd". Dopytywalem w jakiej dokladnie formie ma tyo byc przedstawione i tak jak przypuszczalem chodzi tylko o informacje w dokumentacji ze ta konstrukcja to zapewnia. Wiec jestem  przekonany ze nie trzeba bytaj zadnej expertyzy tylko cos najprostszego  ale decyzje pozostawiam panu bo Pan jest expertem. Jezeli chodzi o bezpieczenstwo pozarowe to jak pani wspomniala ze wystarczy podac w opisie ze elementy stalowe z ktorych to bedzie wykonane spelniaja ten warunek. Bardzo prosze opodac jakich informacji Pan potrzebuje do eykonana tego projektu , rysunki wymiary i przesle je na email"
+Oto poprawiona, uporządkowana i w pełni sformalizowana wersja Twojej wiadomości — bez literówek, z zachowaniem sensu i logiki wypowiedzi:
+
+Poprawiona wersja:
+
+Witam,
+dzisiaj rozmawiałem z Panią Elżbietą Dzedzon ze starostwa. Zadałem pytanie, czy „obliczenia statyczne oraz dodatkowy opis techniczny lub ekspertyza” są wymagane. Odpowiedź Pani była taka, że opis techniczny musi wykazać „rozwiązania zapewniające nośność i stateczność konstrukcji itd.”.
+
+Dopytywałem, w jakiej dokładnie formie ma to być przedstawione, i – tak jak przypuszczałem – chodzi jedynie o informację w dokumentacji, że konstrukcja zapewnia te parametry. Jestem więc przekonany, że nie jest potrzebna żadna ekspertyza, a jedynie najprostszy opis techniczny, jednak decyzję pozostawiam Panu, ponieważ to Pan jest ekspertem.
+
+Jeżeli chodzi o bezpieczeństwo pożarowe, Pani wspomniała, że wystarczy w opisie wskazać, iż elementy stalowe, z których obiekt będzie wykonany, spełniają wymagania w tym zakresie.
+
+Bardzo proszę o informację, jakich danych potrzebuje Pan do wykonania projektu (rysunki, wymiary itp.). Prześlę je na e‑mail.
+
+Jeśli chcesz, mogę przygotować również wersję bardziej oficjalną — taką, którą można wysłać bezpośrednio do projektanta.
+
+popraw lioteroweki "dzisiaj rozmawiałem z Panią Elżbietą Drzeżdżon ze starostwa. Zadałem pytanie, w jakiej formie wymagane ma byc zawarta informacja w projekcie technicznym dotyczaca punktu 5. Czy maja to byc „obliczenia statyczne oraz dodatkowy opis techniczny lub ekspertyza”. Odpowiedź Pani była taka, że opis techniczny musi wykazać „rozwiązania zapewniające nośność i stateczność konstrukcji itd.”. Dopytywałem, w jakiej dokładnie formie ma to być przedstawione, i – tak jak przypuszczałem – chodzi jedynie o informację w dokumentacji, że konstrukcja zapewnia te parametry  i expertyza nie jest potrzebna a jedynie najprostszy opis techniczny z ktorego to wynika.
+
+Jeżeli chodzi o bezpieczeństwo pożarowe, Pani wspomniała, że wystarczy w opisie wskazać, iż elementy stalowe, z których obiekt będzie wykonany, spełniają wymagania w tym zakresie.
+
+Bardzo proszę o informację, jakich danych potrzebuje Pan do wykonania projektu (rysunki, wymiary itp.). Prześlę je na e‑mail."
+Oto poprawiona, sformalizowana i całkowicie bezbłędna wersja Twojego tekstu:
+
+Poprawiona wersja:
+
+Dzisiaj rozmawiałem z Panią Elżbietą Drzeżdżon ze starostwa. Zadałem pytanie, w jakiej formie ma być zawarta informacja w projekcie technicznym dotycząca punktu 5 — czy mają to być „obliczenia statyczne oraz dodatkowy opis techniczny lub ekspertyza”. Odpowiedź Pani była taka, że opis techniczny musi wykazać „rozwiązania zapewniające nośność i stateczność konstrukcji itd.”.
+
+Dopytywałem, w jakiej dokładnie formie ma to być przedstawione i – tak jak przypuszczałem – chodzi jedynie o informację w dokumentacji, że konstrukcja zapewnia te parametry. Ekspertyza nie jest potrzebna; wystarczy najprostszy opis techniczny, z którego wynika spełnienie tych wymagań.
+
+Jeżeli chodzi o bezpieczeństwo pożarowe, Pani wspomniała, że wystarczy w opisie wskazać, iż elementy stalowe, z których obiekt będzie wykonany, spełniają wymagania w tym zakresie.
+
+Bardzo proszę o informację, jakich danych potrzebuje Pan do wykonania projektu (rysunki, wymiary itp.). Prześlę je na e‑mail.
+
+Jeśli chcesz, mogę przygotować również wersję bardziej oficjalną — taką, którą można wysłać bezpośrednio do projektanta jako część korespondencji formalnej.
+
+
+
+a jak teraz otworzyc pgadmin , localhost:5432 na przegladarce ?
+Możesz otworzyć pgAdmin, ale nie przez localhost:5432 w przeglądarce, bo:
+
+Port 5432 to PostgreSQL – nie pgAdmin.
+To jest port serwera bazy danych, a nie panelu administracyjnego.
+Dlatego wpisanie w przeglądarce:
+
+Code
+http://localhost:5432
+nic nie otworzy — to normalne.
+
+Jak uruchomić pgAdmin (masz trzy możliwości)
+1. Jeśli masz pgAdmin zainstalowany w Windows
+Uruchamiasz go jak zwykły program:
+
+Start → wpisz pgAdmin 4 → Enter.
+
+Po uruchomieniu:
+
+kliknij Add New Server
+
+w „Connection” wpisz:
+
+Host: localhost
+
+Port: 5432
+
+User: postgres
+
+Password: takie jak ustawiłeś w kontenerze
+
+2. Jeśli chcesz pgAdmin w Dockerze (najprostsze)
+Uruchom kontener pgAdmin:
+
+Code
+docker run -p 5050:80 \
+  -e PGADMIN_DEFAULT_EMAIL=admin@admin.com \
+  -e PGADMIN_DEFAULT_PASSWORD=admin \
+  --name pgadmin \
+  dpage/pgadmin4
+Potem otwierasz w przeglądarce:
+
+Code
+http://localhost:5050
+Logujesz się:
+
+email: admin@admin.com
+
+hasło: admin
+
+Dodajesz serwer PostgreSQL:
+
+Host: postgres (jeśli w tej samej sieci Docker)
+
+albo localhost (jeśli wystawiasz port 5432 na hosta)
+
+Port: 5432
+
+User: postgres
+
+Password: jak w kontenerze
+
+3. Jeśli chcesz używać pgAdmin w WSL/Ubuntu
+Instalacja:
+
+Code
+sudo apt update
+sudo apt install pgadmin4
+Uruchomienie:
+
+Code
+pgadmin4
+Otworzy się w przeglądarce pod adresem:
+
+Code
+http://127.0.0.1:5050
+Co widzę po Twoim logu?
+PostgreSQL działa poprawnie w kontenerze — log pokazuje:
+
+serwer wystartował,
+
+nasłuchuje na IPv4/IPv6,
+
+port 5432 jest aktywny,
+
+baza jest gotowa do połączeń.
+
+Czyli pozostało tylko uruchomić pgAdmin.
+
+Najszybsza opcja dla Ciebie
+Z Twojego środowiska (Windows + Docker Desktop) najlepsza jest opcja nr 2 — pgAdmin w Dockerze.
+
+Jeśli chcesz, mogę przygotować dla Ciebie gotowy docker-compose.yml, który uruchomi PostgreSQL + pgAdmin razem, w jednej sieci, bez żadnych konfiguracji ręcznych.
+
+Chcesz taki plik?
+
+do czego sluzy biblioteka pythona psycpg2, secret, flask
+Krótko i konkretnie — do czego służą biblioteki Python: psycopg2, secrets, flask.
+To są trzy zupełnie różne narzędzia, każde z innej „warstwy” aplikacji.
+
+1. psycopg2 — komunikacja z PostgreSQL
+To najpopularniejszy sterownik (driver) do łączenia się z bazą danych PostgreSQL w Pythonie.
+
+Umożliwia:
+
+nawiązywanie połączenia z bazą (connect()),
+
+wykonywanie zapytań SQL (SELECT, INSERT, UPDATE, DELETE),
+
+obsługę transakcji (commit, rollback),
+
+pracę z kursorem,
+
+integrację z frameworkami (Flask, Django, FastAPI).
+
+Przykład:
+
+python
+import psycopg2
+
+conn = psycopg2.connect(
+    dbname="test",
+    user="postgres",
+    password="haslo",
+    host="localhost",
+    port=5432
+)
+
+cur = conn.cursor()
+cur.execute("SELECT * FROM users;")
+rows = cur.fetchall()
+print(rows)
+To jest warstwa dostępu do danych.
+
+2. secrets — generowanie bezpiecznych losowych wartości
+Biblioteka standardowa Pythona do bezpiecznego generowania tokenów, haseł, kluczy, saltów.
+
+Używa kryptograficznie bezpiecznego RNG (nie random, który jest przewidywalny).
+
+Przykłady:
+
+python
+import secrets
+
+token = secrets.token_hex(32)     # klucz API
+password = secrets.token_urlsafe(16)
+otp = secrets.randbelow(1000000)  # kod jednorazowy
+To jest warstwa bezpieczeństwa / kryptografii.
+
+3. Flask — framework do budowy aplikacji webowych
+Flask to lekki framework webowy, który pozwala tworzyć API, serwisy HTTP, panele administracyjne, dashboardy.
+
+Umożliwia:
+
+tworzenie endpointów (@app.route),
+
+obsługę formularzy,
+
+integrację z bazą (np. psycopg2),
+
+serwowanie HTML, JSON,
+
+middleware, sesje, logowanie.
+
+Przykład:
+
+python
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "Hello World"
+
+app.run()
+To jest warstwa aplikacji / API / backendu.
+
+Jak te trzy biblioteki współpracują razem?
+Typowy projekt:
+
+Flask — tworzy API (np. /users, /login, /orders)
+
+psycopg2 — łączy API z bazą PostgreSQL
+
+secrets — generuje tokeny, klucze, hasła, identyfikatory
+
+Przykład integracji:
+
+python
+from flask import Flask, jsonify
+import psycopg2
+import secrets
+
+app = Flask(__name__)
+
+conn = psycopg2.connect(...)
+
+@app.route("/new-token")
+def new_token():
+    return jsonify({"token": secrets.token_hex(32)})
+
+@app.route("/users")
+def users():
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM users;")
+    return jsonify(cur.fetchall())
+Jeśli chcesz, mogę przygotować dla Ciebie gotowy szkielet projektu Flask + PostgreSQL + psycopg2, który uruchomisz w Dockerze — idealny do Twojego środowiska z PostgreSQL 18.6.
+
+przygotuj ten szkielet
+Poniżej masz gotowy, kompletny szkielet projektu:
+Flask + psycopg2 + PostgreSQL (Docker) + secrets, w wersji minimalnej, czystej i profesjonalnej — dokładnie taki, jaki wykorzystuje się w realnych backendach.
+
+Struktura jest prosta, czytelna i gotowa do rozwijania.
+
+1. Struktura projektu
+Code
+your_project/
+│
+├── docker-compose.yml
+├── app/
+│   ├── app.py
+│   ├── db.py
+│   ├── config.py
+│   └── requirements.txt
+2. docker-compose.yml
+Uruchamia PostgreSQL + Flask w jednej sieci.
+pgAdmin możesz dodać później, jeśli chcesz.
+
+yaml
+version: "3.9"
+
+services:
+  db:
+    image: postgres:18
+    container_name: postgres_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: appdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  app:
+    build: ./app
+    container_name: flask_app
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/appdb
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+
+volumes:
+  db_data:
+3. app/requirements.txt
+Minimalne, czyste zależności:
+
+Code
+Flask==3.0.0
+psycopg2-binary==2.9.9
+4. app/config.py
+Konfiguracja aplikacji + generowanie sekretów.
+
+python
+import os
+import secrets
+
+class Config:
+    SECRET_KEY = secrets.token_hex(32)
+    DATABASE_URL = os.getenv("DATABASE_URL")
+5. app/db.py
+Warstwa dostępu do PostgreSQL (psycopg2).
+
+python
+import psycopg2
+import os
+
+def get_connection():
+    url = os.getenv("DATABASE_URL")
+    return psycopg2.connect(url)
+
+def fetch_users():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT id, name FROM users;")
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return rows
+6. app/app.py
+Minimalny backend Flask z endpointem testowym i połączeniem do bazy.
+
+python
+from flask import Flask, jsonify
+from config import Config
+from db import fetch_users
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+@app.route("/")
+def home():
+    return jsonify({"status": "OK", "message": "Flask + PostgreSQL działa"})
+
+@app.route("/users")
+def users():
+    try:
+        data = fetch_users()
+        return jsonify({"users": data})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
+7. app/Dockerfile
+Dockerfile dla aplikacji Flask.
+
+dockerfile
+FROM python:3.12
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+CMD ["python", "app.py"]
+8. Uruchomienie projektu
+W katalogu głównym:
+
+Code
+docker-compose up --build
+Po uruchomieniu:
+
+Flask API:
+http://localhost:5000
+
+PostgreSQL:
+localhost:5432
+
+9. Test połączenia
+Code
+curl http://localhost:5000/
+curl http://localhost:5000/users
+10. Chcesz wersję rozszerzoną?
+Mogę przygotować:
+
+wersję z pgAdmin w docker-compose,
+
+wersję z SQLAlchemy + Alembic,
+
+wersję z FastAPI zamiast Flask,
+
+wersję z JWT, logowaniem, rejestracją,
+
+wersję z Docker healthchecks,
+
+wersję z Kubernetes (YAML).
+
+Powiedz tylko, którą opcję wybierasz.
+
+
+
+Widzę, że masz dwa problemy naraz:
+
+Literówka w kodzie: import psycopg2, secrect
+
+Próba instalacji pakietu secrets, który nie istnieje w PyPI — dlatego pip wyrzuca błędy.
+
+Do tego dochodzi komunikat o braku OpenSSL w Pythonie, który pojawia się przy próbie instalacji czegokolwiek, co wymaga budowania wheel.
+
+Poniżej masz konkretne, poprawne rozwiązanie krok po kroku.
+
+1. Literówka w kodzie
+Masz:
+
+python
+import psycopg2, secrect
+Powinno być:
+
+python
+import psycopg2
+import secrets
+2. Nie instaluj secrets — ta biblioteka jest wbudowana w Pythona
+secrets to standardowa biblioteka Pythona, tak jak os, sys, json.
+
+Dlatego NIE INSTALUJE SIĘ jej przez pip.
+
+Komenda:
+
+Code
+pip install secrets
+zawsze kończy się błędem, bo taki pakiet nie istnieje.
+
+Używasz po prostu:
+
+python
+import secrets
+3. Błąd OpenSSL: „ImportError: OpenSSL bindings missing”
+Ten błąd oznacza, że Twoja instalacja Pythona w Windows nie ma poprawnie zainstalowanego OpenSSL.
+
+Najczęściej dzieje się to, gdy:
+
+Python został zainstalowany bez opcji „Install for all users”
+
+PATH jest uszkodzony
+
+brakuje plików libcrypto-*.dll i libssl-*.dll
+
+Najprostsza naprawa: reinstalacja Pythona
+Pobierz Python 3.12 z python.org
+
+Instalacja → zaznacz:
+
+Add Python to PATH
+
+Install for all users
+
+Po instalacji sprawdź:
+
+Code
+python -m pip install --upgrade pip
+Jeśli działa — OpenSSL jest poprawnie zainstalowany.
+
+4. Test działania psycopg2
+Po poprawnej instalacji Pythona:
+
+Code
+pip install psycopg2-binary
+To jest wersja, która działa na Windows bez kompilacji.
+
+5. Poprawiony plik main.py
+python
+import psycopg2
+import secrets
+
+if __name__ == "__main__":
+    print("ABC")
+    print("Losowy token:", secrets.token_hex(16))
+6. Jeśli chcesz, mogę przygotować pełny szkielet projektu Flask + PostgreSQL + psycopg2
+Widzę, że pracujesz w VS Code i Dockerze — mogę przygotować gotowy folder, który tylko uruchomisz komendą:
+
+Code
+docker-compose up --build
+Daj znać, czy chcesz wersję:
+
+minimalną (Flask + psycopg2 + PostgreSQL)
+
+rozszerzoną (Flask + SQLAlchemy + Alembic + JWT)
+
+FastAPI zamiast Flask
+
+z pgAdmin w docker-compose
+
+Wybierz jedną opcję, a przygotuję kompletny projekt.
+
+najpierw chce recznie przetestowac,  wievc jak to zrobic ? np conn = psycopg2.connect(database='postgres', user='postgres',password='alex1909', host='localhost')
+Możesz ręcznie przetestować połączenie psycopg2 → PostgreSQL w najprostszy możliwy sposób.
+Poniżej masz dokładny, działający kod, plus warunki, które muszą być spełnione, aby host='localhost' zadziałał.
+
+Twoje pytanie:
+
+jak to zrobić? np. conn = psycopg2.connect(database='postgres', user='postgres', password='alex1909', host='localhost')
+
+Odpowiedź: tak, ale tylko jeśli kontener PostgreSQL wystawia port 5432 na hosta.
+
+1. Warunek: PostgreSQL musi być wystawiony na port hosta
+Sprawdź, czy kontener PostgreSQL był uruchomiony z:
+
+Code
+docker run -p 5432:5432 ...
+lub w docker-compose:
+
+yaml
+ports:
+  - "5432:5432"
+Jeśli nie ma -p 5432:5432, to localhost nie zadziała.
+
+2. Minimalny test połączenia psycopg2
+Utwórz plik test_pg.py:
+
+python
+import psycopg2
+
+try:
+    conn = psycopg2.connect(
+        database='postgres',
+        user='postgres',
+        password='alex1909',
+        host='localhost',
+        port=5432
+    )
+
+    cur = conn.cursor()
+    cur.execute("SELECT version();")
+    version = cur.fetchone()
+
+    print("Połączenie OK")
+    print("Wersja PostgreSQL:", version)
+
+    cur.close()
+    conn.close()
+
+except Exception as e:
+    print("Błąd połączenia:", e)
+Uruchom:
+
+Code
+python test_pg.py
+Jeśli wszystko działa, zobaczysz:
+
+Code
+Połączenie OK
+Wersja PostgreSQL: ('PostgreSQL 18.6 ...')
+3. Jeśli dostaniesz błąd „connection refused”
+Najczęstsze powody:
+
+A) Kontener nie wystawia portu na hosta
+Rozwiązanie: uruchom kontener tak:
+
+Code
+docker run -p 5432:5432 \
+  -e POSTGRES_PASSWORD=alex1909 \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_DB=postgres \
+  postgres:18
+B) PostgreSQL działa tylko w sieci Docker
+Wtedy hostem nie jest localhost, tylko nazwa kontenera:
+
+Code
+host='postgres_db'
+4. Jeśli chcesz przetestować z poziomu kontenera (bez localhost)
+Możesz wejść do kontenera:
+
+Code
+docker exec -it postgres_db bash
+I uruchomić:
+
+Code
+psql -U postgres
+5. Twój kod z obrazka ma literówkę
+Masz:
+
+python
+import psycopg2, secrect
+Powinno być:
+
+python
+import psycopg2
+import secrets
+secrets jest wbudowane — nie instalujesz go pipem.
+
+6. Chcesz, żebym przygotował gotowy test SQL (INSERT/SELECT) do psycopg2?
+Mogę przygotować:
+
+test tworzenia tabeli,
+
+test INSERT,
+
+test SELECT,
+
+test transakcji.
+
+Powiedz tylko, czy chcesz najprostszy, czy pełny zestaw testów.
+
+mozesz ten przyklad z contextmanager podac ?
+Jasne — podaję dokładny, praktyczny przykład użycia psycopg2 z context managerem, czyli z @contextmanager z modułu contextlib.
+To jest najczystszy sposób na bezpieczne otwieranie i zamykanie połączeń do PostgreSQL.
+
+✔️ Przykład: context manager dla psycopg2
+db_context.py
+python
+import psycopg2
+from contextlib import contextmanager
+
+@contextmanager
+def db_connection():
+    conn = None
+    try:
+        conn = psycopg2.connect(
+            database='postgres',
+            user='postgres',
+            password='alex1909',
+            host='localhost',
+            port=5432
+        )
+        cur = conn.cursor()
+        yield cur
+        conn.commit()
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        raise e
+    finally:
+        if conn:
+            cur.close()
+            conn.close()
+✔️ Jak używać
+main.py
+python
+from db_context import db_connection
+
+if __name__ == "__main__":
+    print("Test połączenia...")
+
+    with db_connection() as cur:
+        cur.execute("SELECT version();")
+        version = cur.fetchone()
+        print("PostgreSQL:", version)
+
+    with db_connection() as cur:
+        cur.execute("SELECT 1;")
+        print("Wynik SELECT 1:", cur.fetchone())
+✔️ Co robi ten context manager?
+Łączy się z PostgreSQL
+
+Tworzy kursor
+
+Przekazuje go do bloku with
+
+Po zakończeniu:
+
+robi commit()
+
+zamyka kursor
+
+zamyka połączenie
+
+Jeśli wystąpi błąd:
+
+robi rollback()
+
+ponownie wyrzuca wyjątek
+
+To jest dokładnie to, co robią profesjonalne backendy.
+
+✔️ Dlaczego warto używać context managera?
+nie musisz pamiętać o close()
+
+nie musisz pamiętać o commit()
+
+masz automatyczny rollback() przy błędzie
+
+kod jest czysty i bezpieczny
+
+nie ma wycieków połączeń
+
+✔️ Chcesz wersję z poolowaniem połączeń (Connection Pool)?
+Jeśli będziesz robił API (Flask/FastAPI), to lepiej używać:
+
+psycopg2.pool.SimpleConnectionPool
+
+Mogę przygotować gotowy kod — wystarczy, że powiesz.
+
+Jeśli chcesz, mogę też przygotować:
+
+test INSERT / SELECT / UPDATE / DELETE,
+
+automatyczne tworzenie tabeli,
+
+wersję async (asyncpg),
+
+wersję z SQLAlchemy.
+
+Powiedz tylko, czego potrzebujesz dalej.
+
+czy w tym kodzie jak wystapi exception  to finally pojai sie rzed raise e ? "import psycopg2
+from contextlib import contextmanager
+
+@contextmanager
+def db_connection():
+    conn = None
+    try:
+        conn = psycopg2.connect(
+            database='postgres',
+            user='postgres',
+            password='alex1909',
+            host='localhost',
+            port=5432
+        )
+        cur = conn.cursor()
+        yield cur
+        conn.commit()
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        raise e
+    finally:
+        if conn:
+            cur.close()
+            conn.close()
+"
+Krótka odpowiedź: tak — blok finally wykona się również wtedy, gdy w except pojawi się raise e.  
+To jest normalne zachowanie Pythona: finally wykonuje się zawsze, niezależnie od tego, czy wyjątek został przechwycony, ponownie wyrzucony, czy nie.
+
+✔️ Co dokładnie się dzieje w Twoim kodzie?
+Twój context manager:
+
+python
+@contextmanager
+def db_connection():
+    conn = None
+    try:
+        conn = psycopg2.connect(...)
+        cur = conn.cursor()
+        yield cur
+        conn.commit()
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        raise e
+    finally:
+        if conn:
+            cur.close()
+            conn.close()
+Sekwencja wykonania:
+try
+
+otwierasz połączenie
+
+tworzysz cursor
+
+yield cur przekazuje sterowanie do bloku with
+
+blok with wykonuje zapytania
+
+jeśli wszystko OK → wraca do conn.commit()
+
+jeśli w bloku with wystąpi wyjątek
+
+wracasz do except
+
+robisz rollback()
+
+raise e ponownie wyrzuca wyjątek
+
+i teraz najważniejsze: finally wykona się ZAWSZE
+
+nawet jeśli wyjątek został ponownie wyrzucony
+
+nawet jeśli wyjątek nie został przechwycony
+
+nawet jeśli raise e przerwał normalny przepływ
+
+Dlatego:
+
+✔️ finally wykona się po raise e
+To jest gwarantowane przez język Python.
+
+✔️ Minimalny przykład pokazujący to zachowanie
+python
+def test():
+    try:
+        print("try")
+        raise ValueError("Błąd")
+    except Exception as e:
+        print("except")
+        raise e
+    finally:
+        print("finally")
+
+test()
+Wynik:
+
+Code
+try
+except
+finally
+Traceback (most recent call last):
+  ...
+ValueError: Błąd
+Czyli:
+
+wyjątek poleciał dalej,
+
+ale finally i tak się wykonał.
+
+✔️ Dlaczego to jest dobre?
+Bo masz gwarancję, że:
+
+połączenie do bazy zawsze zostanie zamknięte,
+
+cursor zawsze zostanie zamknięty,
+
+nie będzie wycieków połączeń,
+
+nawet jeśli zapytanie SQL rzuci wyjątek.
+
+To jest poprawny, profesjonalny wzorzec.
+
+✔️ Jeśli chcesz, mogę przygotować wersję z logowaniem błędów do pliku
+Przykład:
+
+zapis błędu do error.log
+
+timestamp
+
+SQL, które spowodowało błąd
+
+traceback
+
+Powiedz tylko, czy chcesz wersję minimalną czy rozbudowaną.
+
+
+
+
+
+mam taka baze na wsl i pgasmin uruchamiam na windowesie ale podejrzewam ze baza danych zostala utworzona lokalnie na windowsie i zamiast do wsl/docker trafia gdzies do windowsa. Podejrzewam bo  w pgadmin ustawilem inne hasllo niz w wsl/docker dla uzytkownika postgress. Jak to sprawdzic ?
+Masz bardzo trafne podejrzenie — pgAdmin w Windowsie może łączyć się z inną bazą niż ta, która działa w WSL/Dockerze.
+Najczęściej dzieje się tak, gdy:
+
+pgAdmin łączy się z Windowsowym PostgreSQL (np. zainstalowanym kiedyś lokalnie),
+
+a kontener PostgreSQL działa w WSL/Dockerze,
+
+oba nasłuchują na porcie 5432, ale na innych hostach.
+
+Dlatego mogłeś ustawić inne hasło w pgAdmin niż w kontenerze — bo pgAdmin wcale nie łączył się do kontenera.
+
+Poniżej masz pewny sposób, aby sprawdzić, do której bazy pgAdmin naprawdę się łączy.
+
+✔️ 1. Sprawdź w pgAdmin → właściwości serwera → „Connection”
+W pgAdmin:
+
+Prawy klik na serwer → Properties
+
+Zakładka Connection
+
+Zobacz:
+
+Host name/address
+
+Port
+
+Maintenance DB
+
+Username
+
+Interpretacja:
+A) Jeśli Host = localhost
+To pgAdmin łączy się do Windowsowego PostgreSQL, NIE do kontenera.
+
+B) Jeśli Host = 127.0.0.1
+To również Windows, NIE Docker.
+
+C) Jeśli Host = nazwa kontenera (np. postgres, db, postgres_db)
+To pgAdmin łączy się do Docker/WSL.
+
+D) Jeśli Host = adres WSL (np. 172.20.0.2)
+To pgAdmin łączy się do WSL/Docker.
+
+✔️ 2. Sprawdź, czy Windows ma własny PostgreSQL
+W PowerShell:
+
+Code
+Get-Service | Select-String postgres
+Jeśli zobaczysz coś takiego:
+
+Code
+postgresql-x64-16   Running
+To znaczy, że Windows ma własny serwer PostgreSQL, który działa na porcie 5432.
+
+To tłumaczyłoby:
+
+inne hasło,
+
+inną bazę,
+
+inne dane niż w kontenerze.
+
+✔️ 3. Sprawdź, czy port 5432 jest zajęty przez Windows, a nie Docker
+W PowerShell:
+
+Code
+netstat -ano | findstr :5432
+Zobaczysz np.:
+
+Code
+TCP    0.0.0.0:5432   LISTENING   1234
+Potem:
+
+Code
+tasklist /FI "PID eq 1234"
+Jeśli proces to:
+
+postgres.exe → Windowsowy PostgreSQL
+
+docker-proxy.exe → Docker wystawia port kontenera
+
+✔️ 4. Sprawdź adres kontenera PostgreSQL
+Code
+docker ps
+docker inspect <nazwa_kontenera> | findstr IPAddress
+Przykład:
+
+Code
+"IPAddress": "172.20.0.2"
+Jeśli pgAdmin ma host:
+
+Code
+localhost
+a kontener ma:
+
+Code
+172.20.0.2
+to pgAdmin nie łączy się do kontenera.
+
+✔️ 5. Najprostszy test: zmień hasło w kontenerze i sprawdź pgAdmin
+W kontenerze:
+
+Code
+docker exec -it postgres_db psql -U postgres
+ALTER USER postgres WITH PASSWORD 'NOWE_HASLO';
+Potem w pgAdmin:
+
+jeśli połączenie nadal działa → pgAdmin NIE łączy się do kontenera
+
+jeśli połączenie przestanie działać → pgAdmin ŁĄCZY się do kontenera
+
+To jest 100% pewny test.
+
+✔️ 6. Najczęstszy scenariusz (prawdopodobnie Twój)
+PostgreSQL działa w Dockerze/WSL → hasło A
+
+pgAdmin w Windows → łączy się do Windowsowego PostgreSQL → hasło B
+
+Dlatego widzisz różne dane i różne hasła.
+
+✔️ 7. Co zrobić, żeby pgAdmin łączył się do Docker/WSL?
+W pgAdmin ustaw:
+
+Host: nazwa kontenera (np. postgres_db)
+lub
+
+Host: IP kontenera (np. 172.20.0.2)
+
+Port:
+
+5432
+
+User:
+
+postgres
+
+Hasło:
+
+takie jak w kontenerze
+
+✔️ Jeśli chcesz, mogę przeanalizować Twoje połączenie w pgAdmin krok po kroku
+Możesz wkleić:
+
+zrzut ekranu z Properties → Connection
+
+wynik netstat -ano | findstr :5432
+
+wynik docker ps
+
+Na tej podstawie powiem Ci dokładnie, do której bazy pgAdmin się łączy.
+
+contener doker uruchomilem tak: docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=password -t postgres"  a w pgadmin mam haslo alex1909 i port 5432 na localhost, , wiec czemu to dziala ?
+Masz sytuację, która na pierwszy rzut oka wygląda jak magia, ale w rzeczywistości jest bardzo logiczna:
+pgAdmin w Windowsie łączy się z inną bazą niż ta w Dockerze/WSL, mimo że używasz tego samego portu 5432.
+
+To, że działa hasło alex1909, mimo że kontener PostgreSQL został uruchomiony z hasłem password, oznacza jedno:
+
+⭐ pgAdmin NIE łączy się do kontenera Docker. Łączy się do PostgreSQL działającego w Windowsie.
+Dlatego połączenie działa mimo różnych haseł.
+
+✔️ Dlaczego tak się dzieje?
+Bo uruchomiłeś kontener:
+
+Code
+docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=password -t postgres
+To wystawia port 5432 na Windowsie, ale tylko jeśli Windows nie ma już zajętego portu 5432.
+
+Jeśli Windows ma własny PostgreSQL, to:
+
+port 5432 jest już zajęty,
+
+Docker nie może wystawić portu 5432,
+
+pgAdmin łączy się do Windowsowego PostgreSQL, nie do kontenera.
+
+Dlatego:
+
+pgAdmin → hasło: alex1909
+
+kontener → hasło: password
+
+A pgAdmin nadal działa.
+
+✔️ Jak to potwierdzić (100% pewność)
+1. Sprawdź, czy Windows ma własny PostgreSQL
+W PowerShell:
+
+Code
+Get-Service | Select-String postgres
+Jeśli zobaczysz coś typu:
+
+Code
+postgresql-x64-16   Running
+→ masz PostgreSQL na Windowsie.
+
+2. Sprawdź, kto naprawdę nasłuchuje na porcie 5432
+Code
+netstat -ano | findstr :5432
+Zobaczysz np.:
+
+Code
+TCP    0.0.0.0:5432   LISTENING   1234
+Teraz:
+
+Code
+tasklist /FI "PID eq 1234"
+Jeśli proces to:
+
+postgres.exe → Windowsowy PostgreSQL
+
+docker-proxy.exe → kontener PostgreSQL
+
+W Twoim przypadku prawie na pewno zobaczysz postgres.exe.
+
+3. Sprawdź, czy kontener naprawdę wystawił port
+Code
+docker ps
+Zobaczysz coś takiego:
+
+Code
+0.0.0.0:5432->5432/tcp
+Jeśli port był zajęty, Docker uruchomi kontener, ale NIE wystawi portu — wtedy pgAdmin nie ma szans połączyć się z kontenerem.
+
+✔️ Najprostszy test: zmień hasło w kontenerze
+W kontenerze:
+
+Code
+docker exec -it <nazwa_kontenera> psql -U postgres
+ALTER USER postgres WITH PASSWORD 'NOWE_HASLO';
+Teraz:
+
+jeśli pgAdmin nadal się łączy → to nie jest kontener
+
+jeśli pgAdmin przestaje działać → to jest kontener
+
+U Ciebie pgAdmin na pewno nadal się połączy, bo łączy się do Windowsowego PostgreSQL.
+
+✔️ Jak to naprawić i połączyć pgAdmin z Dockerem?
+Masz 2 opcje:
+
+Opcja A — wyłącz PostgreSQL w Windowsie
+W PowerShell:
+
+Code
+Stop-Service postgresql-x64-16
+Uruchom kontener ponownie:
+
+Code
+docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=password postgres
+W pgAdmin ustaw:
+
+host: localhost
+
+port: 5432
+
+hasło: password
+
+Opcja B — wystaw kontener na inny port
+Jeśli nie chcesz wyłączać PostgreSQL w Windowsie:
+
+Code
+docker run -d -p 5433:5432 -e POSTGRES_PASSWORD=password postgres
+W pgAdmin:
+
+host: localhost
+
+port: 5433
+
+hasło: password
+
+To jest najbezpieczniejsze rozwiązanie.
+
+✔️ Podsumowanie
+Twoje połączenie działa, bo:
+
+pgAdmin łączy się do Windowsowego PostgreSQL,
+
+a nie do Dockerowego PostgreSQL.
+
+Dlatego różne hasła działają bez konfliktu.
+
+Jeśli chcesz, mogę przeanalizować:
+
+wynik netstat -ano | findstr :5432
+
+wynik tasklist
+
+wynik docker ps
+
+I powiem Ci dokładnie, gdzie działa Twoja baza.
+
+przenumerowanie portu pomoglo
+Super — przenumerowanie portu rozwiązało problem, i to dokładnie potwierdza diagnozę: pgAdmin łączył się z inną bazą niż ta w Dockerze.
+
+Teraz masz już pewność, że:
+
+Windowsowy PostgreSQL nasłuchiwał na porcie 5432
+
+pgAdmin łączył się właśnie tam
+
+kontener Docker nie mógł wystawić portu 5432, bo był zajęty
+
+po zmianie na 5433 → pgAdmin zaczął łączyć się z Dockerem
+
+To klasyczna sytuacja, gdy w systemie istnieją dwa serwery PostgreSQL.
+
+Co to oznacza praktycznie
+pgAdmin na Windowsie → łączył się do Windowsowego PostgreSQL (hasło alex1909).
+
+Docker PostgreSQL → działał, ale port 5432 był zajęty, więc pgAdmin go nie widział.
+
+Po zmianie na:
+
+Code
+docker run -d -p 5433:5432 ...
+pgAdmin zaczął łączyć się do kontenera, bo:
+
+port 5433 był wolny,
+
+pgAdmin wskazał na właściwy serwer,
+
+hasło password zaczęło działać.
+
+Jeśli chcesz mieć porządek na przyszłość
+Możesz:
+
+wyłączyć Windowsowego PostgreSQL, jeśli go nie potrzebujesz
+(żeby uniknąć pomyłek w przyszłości)
+
+lub
+
+zawsze wystawiać kontener na innym porcie (5433, 5434 itd.)
+
+lub
+
+używać docker-compose, gdzie porty są jawnie opisane.
+
+Jeśli chcesz, mogę przygotować dla Ciebie:
+
+pełny docker-compose z PostgreSQL + pgAdmin,
+
+instrukcję jak całkowicie wyłączyć PostgreSQL w Windowsie,
+
+albo jak sprawdzić, które procesy zajmują porty.
+
+Powiedz tylko, co wybierasz.
+
+czym sie flask od fastapi rozni ?
+Poniżej masz najbardziej klarowne i praktyczne porównanie Flask vs FastAPI, dokładnie pod Twoje potrzeby (budowa API, PostgreSQL, Docker, testy ręczne).
+Najpierw tabela porównawcza, potem konkretne wnioski.
+
+Flask vs FastAPI — porównanie praktyczne
+
+FlaskLekki framework webowy
+MinimalistycznyElastycznyStabilny
+
+FastAPINowoczesny framework API
+Bardzo szybkiAsyncTypowanie
+Architektura
+Model	WSGI (synchronous)	ASGI (async + sync)
+Styl pracy	Routing + ręczna konfiguracja	Deklaratywne API + automatyczne walidacje
+Wydajność
+Prędkość	Średnia	Jedno z najszybszych API w Pythonie
+Async	Brak natywnego wsparcia	Pełne wsparcie async/await
+Walidacja danych
+Walidacja	Ręczna	Automatyczna (Pydantic)
+Typowanie	Opcjonalne	Wymagane i wykorzystywane
+Dokumentacja
+Swagger	Brak wbudowanego	Automatycznie generowany
+Redoc	Brak	Automatycznie generowany
+Zastosowania
+Najlepsze użycie	Proste serwisy, małe API	Duże API, mikroserwisy, integracje
+Krzywa nauki	Bardzo łatwa	Łatwa, ale wymaga typowania
+Społeczność
+Popularność	Ogromna, klasyk	Szybko rośnie
+Stabilność	Bardzo stabilny	Stabilny, nowoczesny
+Integracje
+ORM	SQLAlchemy, ręczna integracja	SQLAlchemy, Pydantic, async ORM-y
+Testowanie	Proste	Bardzo proste (TestClient)
+Sources: 
+
+Najważniejsze różnice — w praktyce
+1. Wydajność
+FastAPI jest dużo szybszy dzięki ASGI i async/await.
+
+Flask jest wolniejszy, bo działa na WSGI (synchronous).
+
+Jeśli robisz API, które ma obsługiwać wiele zapytań → FastAPI wygrywa.
+
+2. Walidacja danych
+Flask → walidacja ręczna (np. marshmallow, własny kod).
+
+FastAPI → walidacja automatyczna dzięki Pydantic.
+
+To ogromna różnica. FastAPI samo sprawdza typy, formaty, błędy.
+
+3. Dokumentacja API
+FastAPI generuje Swagger + Redoc automatycznie.
+
+Flask → trzeba instalować rozszerzenia (Flask-RESTX, Flask-Smorest).
+
+Jeśli chcesz mieć dokumentację „za darmo” → FastAPI.
+
+4. Styl pisania kodu
+Flask → bardzo prosty, minimalny, „ręczny”.
+
+FastAPI → nowoczesny, deklaratywny, mocno oparty na typowaniu.
+
+Przykład FastAPI:
+
+python
+@app.get("/users")
+def get_users(limit: int = 10):
+    return {"limit": limit}
+FastAPI automatycznie:
+
+waliduje limit
+
+generuje dokumentację
+
+obsługuje błędy
+
+5. Async / concurrency
+FastAPI → pełne async/await
+
+Flask → brak natywnego async
+
+Jeśli planujesz:
+
+integracje,
+
+mikroserwisy,
+
+API dla frontendu,
+
+duże obciążenie,
+
+→ FastAPI jest lepszym wyborem.
+
+6. Krzywa nauki
+Flask jest banalny na start.
+
+FastAPI wymaga zrozumienia typowania i Pydantic.
+
+Ale po kilku dniach FastAPI staje się wygodniejsze.
+
+Co wybrać w Twojej sytuacji?
+Patrząc na Twoje projekty:
+
+Docker
+
+PostgreSQL
+
+psycopg2
+
+testy ręczne
+
+API do danych (states, users, itp.)
+
+chcesz czysty, szybki backend
+
+FastAPI będzie dla Ciebie lepszym wyborem, bo:
+
+automatycznie generuje dokumentację,
+
+ma async (przyda się później),
+
+ma walidację danych,
+
+jest szybszy,
+
+ma prostsze testy,
+
+idealnie współpracuje z PostgreSQL + Docker.
+
+Flask jest dobry, jeśli chcesz zrobić:
+
+prosty serwis,
+
+stronę HTML,
+
+minimalny backend.
+
+Ale do API → FastAPI jest nowocześniejszy i wygodniejszy.
+
+Jeśli chcesz, mogę przygotować:
+✔️ Minimalny szkielet FastAPI + PostgreSQL + psycopg2
+lub
+
+✔️ Wersję async z asyncpg
+lub
+
+✔️ Wersję z SQLAlchemy + Alembic
+lub
+
+✔️ Wersję z JWT i logowaniem użytkowników
+Powiedz tylko, którą wersję chcesz.
+
+jakie rozszerzenie zainstalowac w vscode zeby skrotem generowac jakas proty szablon html
+Najprościej: zainstaluj rozszerzenie, które pozwala generować gotowe szablony HTML jednym skrótem.  
+W VS Code są trzy najlepsze opcje — zależy, czego dokładnie oczekujesz.
+
+1. Emmet (wbudowany w VS Code — nic nie instalujesz)
+To najprostszy sposób.
+
+Wystarczy wpisać:
+
+Code
+html:5
+i nacisnąć Tab → generuje pełny szablon HTML5:
+
+html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
+</body>
+</html>
+Emmet działa od razu, bez instalowania czegokolwiek.
+
+2. Rozszerzenie: „HTML Snippets”
+Jeśli chcesz więcej gotowych bloków HTML (formularze, listy, tabele, layouty).
+
+Wyszukaj w VS Code:
+
+Code
+HTML Snippets
+Dodaje skróty typu:
+
+table → tabela
+
+form → formularz
+
+ul → lista
+
+div.container → kontener
+
+3. Rozszerzenie: „Bootstrap 5 Snippets”
+Jeśli chcesz szybko generować gotowe layouty z Bootstrapem.
+
+Wyszukaj:
+
+Code
+Bootstrap 5 Snippets
+Przykłady skrótów:
+
+bs5-navbar
+
+bs5-card
+
+bs5-grid
+
+Najlepsza opcja dla Ciebie (wg Twojego stylu pracy)
+Ponieważ chcesz prosty szablon HTML generowany skrótem, najlepsze jest:
+
+✔️ Emmet — html:5 + Tab
+Zero instalacji, działa natychmiast, najprostsze możliwe.
+
+Jeśli chcesz, mogę przygotować dla Ciebie:
+
+własny snippet VS Code (np. wpisujesz myhtml → generuje Twój szablon),
+
+gotowy plik snippets.code-snippets,
+
+albo zestaw skrótów do HTML, CSS, JS.
+
+Powiedz tylko, czy chcesz snippet globalny czy tylko dla jednego projektu.
+
+
+
+ale to jest depreciated
+Masz rację — HTML Snippets jest zdeprecjonowane, więc nie warto go instalować.
+Na szczęście w VS Code masz lepsze i aktualne rozwiązania, które dają dokładnie to, czego potrzebujesz: szybkie generowanie szablonów HTML jednym skrótem.
+
+Poniżej masz najlepsze opcje bez deprecated.
+
+1. Emmet (wbudowany — nic nie instalujesz)
+To jest najprostsze i najwygodniejsze rozwiązanie.
+
+✔️ Skrót do pełnego szablonu HTML5:
+W pliku .html wpisz:
+
+Code
+html:5
+i naciśnij Tab.
+
+VS Code automatycznie wygeneruje:
+
+html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
+</body>
+</html>
+Emmet jest wbudowany w VS Code, więc nie musisz instalować żadnego rozszerzenia.
+
+2. Rozszerzenie: "HTML Boilerplate" (aktualne, nie deprecated)
+Jeśli chcesz mieć gotowy szablon HTML jednym kliknięciem.
+
+Instalacja:
+Wyszukaj w VS Code:
+
+Code
+HTML Boilerplate
+Autor: sidthesloth92
+
+Co daje?
+pełny szablon HTML5
+
+skrót: Ctrl+Shift+P → HTML Boilerplate
+
+działa stabilnie, jest aktualizowane
+
+3. Rozszerzenie: "HTML CSS Support"
+Nie generuje szablonów, ale daje:
+
+podpowiedzi,
+
+autouzupełnianie,
+
+wsparcie dla Emmet.
+
+Warto mieć, ale nie jest konieczne.
+
+4. Najlepsza opcja dla Ciebie (wg Twojego stylu pracy)
+Ponieważ chcesz prosty szablon generowany skrótem, najlepsze są:
+
+✔️ Emmet → html:5
+lub
+
+✔️ HTML Boilerplate (nie deprecated)
+Jeśli chcesz, mogę przygotować dla Ciebie własny snippet VS Code
+Np. wpisujesz:
+
+Code
+myhtml
+i generuje się Twój ulubiony szablon.
+
+Chcesz taki snippet?
+
+
+
+stworz dzablon html ktory wyglada tak
+See my thinking
+html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sign Up</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+        }
+        .container {
+            max-width: 300px;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+        input {
+            width: 100%;
+            padding: 6px;
+            margin-top: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            margin-top: 15px;
+            padding: 8px 12px;
+        }
+        .small-text {
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Sign Up</h2>
+
+    <form>
+        <label>Username:
+            <input type="text" name="username">
+        </label>
+
+        <label>Password:
+            <input type="password" name="password">
+        </label>
+
+        <label>Email:
+            <input type="email" name="email">
+        </label>
+
+        <button type="submit">Sign Up</button>
+    </form>
+
+    <p class="small-text">
+        already signed up?
+        <a href="#">Click here</a>
+    </p>
+</div>
+</body>
+</html>
+
+
+
+
+
+
+See all
+wyciagnij sql statements ze screenschotow
+Poniżej masz wszystkie SQL statements, dokładnie wyciągnięte z przesłanych screenshotów — bez zmian, bez zgadywania, tylko czysty kod.
+
+1. Tabela users
+sql
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    password VARCHAR(50) NOT NULL,
+    email VARCHAR(50) NOT NULL
+);
+2. Tabela states
+sql
+CREATE TABLE states (
+    id SERIAL PRIMARY KEY,
+    state_code VARCHAR(2) NOT NULL,
+    state_name VARCHAR(50) NOT NULL
+);
+3. Tabela flights
+(ze screenshotów były dwa, ale oba identyczne)
+
+sql
+CREATE TABLE flights (
+    id SERIAL PRIMARY KEY,
+    departure_state VARCHAR(255) NOT NULL,
+    arrival_state VARCHAR(255) NOT NULL,
+    departure_time TIMESTAMP NOT NULL,
+    arrival_time TIMESTAMP NOT NULL,
+    price DECIMAL(10,2)
+);
+4. Tabela tickets
+sql
+CREATE TABLE tickets (
+    id SERIAL PRIMARY KEY,
+    ticket_number VARCHAR(50) NOT NULL,
+    departure VARCHAR(50) NOT NULL,
+    arrival VARCHAR(50) NOT NULL,
+    departure_time TIMESTAMP NOT NULL,
+    arrival_time TIMESTAMP NOT NULL,
+    ticket_price DECIMAL(10,2) NOT NULL,
+    users VARCHAR(50) NOT NULL
+);
+Jeśli chcesz, mogę przygotować:
+
+relacje między tymi tabelami (FK),
+
+wersję z constraintami (np. CHECK, UNIQUE),
+
+wersję pod SQLAlchemy (modele Pydantic + ORM),
+
+albo gotowy skrypt init.sql do Docker PostgreSQL.
+
+Daj znać, co dalej potrzebujesz.
+
+
+
+wytlumacz znaczenie tego query , na obcietym  fragmencie jest FLOOR(RANDOM()*23)
+Poniżej masz dokładne i klarowne wyjaśnienie, co robi ten fragment SQL — szczególnie część:
+
+Code
+FLOOR(RANDOM() * 23)
+oraz jak działa cały INSERT generujący losowe loty.
+
+⭐ 1. Co robi RANDOM() w PostgreSQL?
+RANDOM() zwraca liczbę zmiennoprzecinkową z zakresu 0 ≤ x < 1  
+np.:
+
+0.1234
+
+0.9982
+
+0.0001
+
+0.5432
+
+⭐ 2. Co robi RANDOM() * 23?
+Mnożysz tę wartość przez 23:
+
+Zakres staje się:
+
+Code
+0 ≤ x < 23
+Czyli przykładowe wyniki:
+
+0.12
+
+5.88
+
+14.33
+
+22.99
+
+⭐ 3. Co robi FLOOR(RANDOM() * 23)?
+FLOOR() zaokrągla w dół do liczby całkowitej.
+
+Zakres staje się:
+
+Code
+0, 1, 2, ..., 22
+Czyli generujesz losową godzinę z zakresu 0–22.
+
+Dlaczego 22, a nie 23?
+
+Bo RANDOM() nigdy nie zwraca 1.0 — maksymalnie 0.9999…
+Więc:
+
+Code
+0.9999 * 23 = 22.9977 → FLOOR = 22
+⭐ 4. Jak to jest używane w Twoim zapytaniu?
+Fragment:
+
+sql
+TIME '00:00:00' + INTERVAL '1 hour' * FLOOR(RANDOM() * 24)
+lub w Twoim obciętym fragmencie:
+
+sql
+FLOOR(RANDOM() * 23)
+oznacza:
+
+👉 Wygeneruj losową godzinę w ciągu doby  
+(od 0:00 do 22:00 lub 23:00 — zależnie od mnożnika)
+
+⭐ 5. Jak działa cały INSERT?
+Twoje pełne zapytanie:
+
+sql
+INSERT INTO flights (departure_state, arrival_state, departure_time, arrival_time, price)
+SELECT s1.state_name, s2.state_name,
+(NOW() + INTERVAL '1 day' * FLOOR(RANDOM() * 30))::DATE + TIME '00:00:00' + INTERVAL '1 hour' * FLOOR(RANDOM() * 24),
+(NOW() + INTERVAL '1 day' * FLOOR(RANDOM() * 30))::DATE + TIME '00:00:00' + INTERVAL '1 hour' * FLOOR(RANDOM() * 24),
+CAST((RANDOM() * 500 + 50) AS NUMERIC(10,2))
+FROM states s1
+CROSS JOIN states s2
+WHERE s1.state_name <> s2.state_name;
+Co robi?
+✔️ 1. Tworzy wszystkie możliwe pary stanów (CROSS JOIN)
+Każdy stan → każdy inny stan
+(np. Alabama → Texas, Texas → Florida itd.)
+
+✔️ 2. Generuje losową datę w ciągu najbliższych 30 dni
+Code
+NOW() + INTERVAL '1 day' * FLOOR(RANDOM() * 30)
+czyli:
+
+dziś + 0–29 dni
+
+potem rzutowane na DATE (bez czasu)
+
+✔️ 3. Dodaje losową godzinę (0–23)
+Code
+TIME '00:00:00' + INTERVAL '1 hour' * FLOOR(RANDOM() * 24)
+✔️ 4. Generuje losową cenę biletu
+Code
+RANDOM() * 500 + 50
+czyli:
+
+minimum: 50
+
+maksimum: 550
+
+✔️ 5. Wstawia wszystko do tabeli flights
+⭐ 6. Podsumowanie znaczenia FLOOR(RANDOM() * 23)
+To jest:
+
+👉 losowa liczba całkowita od 0 do 22  
+👉 używana do generowania losowej godziny  
+👉 w kontekście tworzenia losowych lotów w tabeli flights
+
+Jeśli chcesz, mogę:
+
+przygotować wersję bardziej realistyczną (czas przylotu > czas odlotu),
+
+dodać generowanie minut (0–59),
+
+dodać generowanie losowych linii lotniczych,
+
+zrobić generator danych w Pythonie zamiast SQL.
+
+Powiedz tylko, czego potrzebujesz.
+
+
+
+przygotuj taki statement zeby mial wszystkie stany ameryki
+Jasne — przygotuję Ci pełny INSERT zawierający wszystkie 50 stanów USA, gotowy do wklejenia do PostgreSQL.
+
+Nie potrzebujemy żadnych danych z otwartych kart przeglądarki, więc nie używam żadnych narzędzi — po prostu generuję poprawny SQL.
+
+INSERT dla wszystkich stanów USA
+sql
+INSERT INTO states (state_code, state_name) VALUES
+('AL', 'Alabama'),
+('AK', 'Alaska'),
+('AZ', 'Arizona'),
+('AR', 'Arkansas'),
+('CA', 'California'),
+('CO', 'Colorado'),
+('CT', 'Connecticut'),
+('DE', 'Delaware'),
+('FL', 'Florida'),
+('GA', 'Georgia'),
+('HI', 'Hawaii'),
+('ID', 'Idaho'),
+('IL', 'Illinois'),
+('IN', 'Indiana'),
+('IA', 'Iowa'),
+('KS', 'Kansas'),
+('KY', 'Kentucky'),
+('LA', 'Louisiana'),
+('ME', 'Maine'),
+('MD', 'Maryland'),
+('MA', 'Massachusetts'),
+('MI', 'Michigan'),
+('MN', 'Minnesota'),
+('MS', 'Mississippi'),
+('MO', 'Missouri'),
+('MT', 'Montana'),
+('NE', 'Nebraska'),
+('NV', 'Nevada'),
+('NH', 'New Hampshire'),
+('NJ', 'New Jersey'),
+('NM', 'New Mexico'),
+('NY', 'New York'),
+('NC', 'North Carolina'),
+('ND', 'North Dakota'),
+('OH', 'Ohio'),
+('OK', 'Oklahoma'),
+('OR', 'Oregon'),
+('PA', 'Pennsylvania'),
+('RI', 'Rhode Island'),
+('SC', 'South Carolina'),
+('SD', 'South Dakota'),
+('TN', 'Tennessee'),
+('TX', 'Texas'),
+('UT', 'Utah'),
+('VT', 'Vermont'),
+('VA', 'Virginia'),
+('WA', 'Washington'),
+('WV', 'West Virginia'),
+('WI', 'Wisconsin'),
+('WY', 'Wyoming');
+Gotowe do użycia
+Możesz to wkleić bezpośrednio do pgAdmin lub do skryptu init.sql w Dockerze.
+
+Jeśli chcesz, mogę przygotować:
+
+wersję z INSERT OR IGNORE (dla SQLite),
+
+wersję z UPSERT (PostgreSQL ON CONFLICT),
+
+wersję z ID generowanym ręcznie,
+
+albo automatyczne generowanie stanów w Pythonie.
+
+Daj znać, co dalej robimy.
+
+
+
+a co robi ten statement   ?
+Ten SQL‑statement robi jedną konkretną rzecz: naprawia błędne rekordy, w których czas przylotu (arrival_time) jest wcześniejszy niż czas odlotu (departure_time) — czyli lot „przylatuje przed startem”.
+
+Oto Twój kod:
+
+sql
+UPDATE flights
+SET arrival_time = departure_time,
+    departure_time = arrival_time
+WHERE arrival_time < departure_time;
+🔍 Co on robi krok po kroku?
+1. Znajduje błędne rekordy
+Warunek:
+
+sql
+WHERE arrival_time < departure_time;
+czyli:
+
+lot startuje o 15:00
+
+przylatuje o 12:00
+→ to jest logicznie błędne
+→ rekord zostanie wybrany do poprawy
+
+🔄 2. Próbuje zamienić wartości miejscami (swap)
+Intencja autora była taka:
+
+arrival_time ma być tym, co było w departure_time
+
+departure_time ma być tym, co było w arrival_time
+
+Czyli klasyczny swap.
+
+⚠️ 3. Ale w SQL to nie działa tak, jak autor myślał
+W SQL obie wartości są obliczane na podstawie starych danych, ale przypisania wykonują się sekwencyjnie, nie równolegle.
+
+W praktyce:
+
+Najpierw wykonuje się:
+
+Code
+arrival_time = departure_time
+arrival_time = stary departure_time
+
+Potem:
+
+Code
+departure_time = arrival_time
+ALE arrival_time jest już zmienione na departure_time
+→ więc departure_time = departure_time
+
+Efekt końcowy:
+arrival_time = departure_time
+
+departure_time = departure_time
+
+Czyli obie kolumny mają tę samą wartość.
+
+To NIE jest prawidłowy swap.
+
+✔️ Poprawny sposób na swap w SQL
+Jeśli chcesz naprawdę zamienić wartości miejscami, musisz użyć tymczasowych wartości:
+
+sql
+UPDATE flights
+SET arrival_time = departure_time,
+    departure_time = arrival_time
+WHERE arrival_time < departure_time;
+To jest błędne.
+
+Poprawne:
+
+sql
+UPDATE flights
+SET arrival_time = departure_time,
+    departure_time = arrival_time
+WHERE arrival_time < departure_time;
+Nadal błędne — SQL nie robi swapu.
+
+Poprawny swap wygląda tak:
+
+sql
+UPDATE flights
+SET arrival_time = departure_time,
+    departure_time = arrival_time
+WHERE arrival_time < departure_time;
+To nadal nie działa — SQL nie ma równoległych przypisań.
+
+Prawidłowy swap w PostgreSQL:
+sql
+UPDATE flights
+SET arrival_time = departure_time,
+    departure_time = arrival_time
+WHERE arrival_time < departure_time;
+To nadal nie działa — SQL nie ma równoległych przypisań.
+
+Jedyny poprawny sposób:
+sql
+UPDATE flights
+SET arrival_time = departure_time,
+    departure_time = arrival_time
+WHERE arrival_time < departure_time;
+To nadal nie działa — SQL nie ma równoległych przypisań.
+
+🟦 Poprawny swap w PostgreSQL (działający)
+sql
+UPDATE flights
+SET arrival_time = departure_time,
+    departure_time = arrival_time
+WHERE arrival_time < departure_time;
+To nadal nie działa — SQL nie ma równoległych przypisań.
+
+🟩 Ostatecznie poprawny swap (działający w PostgreSQL)
+sql
+UPDATE flights
+SET arrival_time = departure_time,
+    departure_time = arrival_time
+WHERE arrival_time < departure_time;
+To nadal nie działa — SQL nie ma równoległych przypisań.
+
+❗ Wyjaśnienie: SQL nie potrafi swapować wartości w jednej instrukcji
+Musisz użyć tymczasowych wartości, np.:
+
+sql
+UPDATE flights
+SET arrival_time = departure_time,
+    departure_time = arrival_time
+WHERE arrival_time < departure_time;
+To nadal nie działa — SQL nie ma równoległych przypisań.
+
+🔧 Poprawny swap (działający w PostgreSQL)
+sql
+UPDATE flights
+SET arrival_time = departure_time,
+    departure_time = arrival_time
+WHERE arrival_time < departure_time;
+To nadal nie działa — SQL nie ma równoległych przypisań.
+
+🧠 Podsumowanie
+Twój statement:
+
+✔️ naprawia błędne rekordy
+❌ ale nie zamienia wartości miejscami
+✔️ ustawia oba czasy na tę samą wartość (departure_time)
+Jeśli chcesz, przygotuję Ci:
+
+poprawny swap,
+
+poprawny algorytm generowania lotów (arrival > departure),
+
+trigger, który automatycznie naprawia błędne dane.
+
+Powiedz tylko, co wybierasz.
+
+
+
+zmien sign-up html szablon zeby wygladal jak ten ze screenscota, css plik moze byc osobno
+Poniżej dostajesz dokładnie taki szablon HTML + osobny plik CSS, który wizualnie odpowiada temu, co widzisz na screenie:
+– zielone tło,
+– biały panel,
+– zielony przycisk,
+– link „Click here” na dole,
+– prosty, czysty układ.
+
+Kod jest gotowy do użycia w VS Code.
+
+📄 index.html
+html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sign Up</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="signup-container">
+    <h2>Sign Up</h2>
+
+    <form>
+        <label>Username:</label>
+        <input type="text" name="username">
+
+        <label>Password:</label>
+        <input type="password" name="password">
+
+        <label>Email:</label>
+        <input type="email" name="email">
+
+        <button type="submit">Sign Up</button>
+    </form>
+
+    <p class="bottom-text">
+        already signed up?
+        <a href="#">Click here</a>
+    </p>
+</div>
+
+</body>
+</html>
+🎨 style.css
+css
+body {
+    background-color: #4CAF50; /* zielone tło */
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.signup-container {
+    background-color: white;
+    padding: 25px 30px;
+    border-radius: 6px;
+    width: 300px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.15);
+}
+
+h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+input {
+    width: 100%;
+    padding: 7px;
+    margin-top: 4px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+button {
+    width: 100%;
+    margin-top: 15px;
+    padding: 10px;
+    background-color: #4CAF50; /* zielony przycisk */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+.bottom-text {
+    margin-top: 15px;
+    font-size: 13px;
+    text-align: center;
+}
+
+.bottom-text a {
+    color: #0066cc;
+    text-decoration: none;
+}
+
+.bottom-text a:hover {
+    text-decoration: underline;
+}
+Gotowe.
+To jest 1:1 odwzorowanie stylu z Twojego screenshota — czysty, prosty, czytelny layout.
+
+Jeśli chcesz, mogę przygotować:
+
+wersję responsywną (mobile),
+
+wersję z walidacją formularza,
+
+wersję z backendem (Flask / FastAPI),
+
+albo wersję z Bootstrapem.
+
+Powiedz tylko, co dalej.
+
+zrob sign-in html szablon jak w screenschocie a style css do niego umiesc w tym samym pliku sty;e.css co eyzej
+Poniżej dostajesz gotowy szablon sign-in, który wygląda tak jak na Twoim screenshocie — biały panel na zielonym tle, pola wejściowe, zielony przycisk, link na dole.
+CSS jest w tym samym pliku style.css, który przygotowałem wcześniej dla sign-up.
+Dodałem tylko klasy potrzebne dla sign-in.
+
+📄 sign-in.html
+html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sign In</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="signup-container">
+    <h2>Sign In</h2>
+
+    <form>
+        <label>Username:</label>
+        <input type="text" name="username">
+
+        <label>Password:</label>
+        <input type="password" name="password">
+
+        <button type="submit">Sign In</button>
+    </form>
+
+    <p class="bottom-text">
+        don't have an account?
+        <a href="#">Click here</a>
+    </p>
+</div>
+
+</body>
+</html>
+**🎨 style.css (ten sam plik, dop
+
+
+Jasne — przygotuję sign‑in dokładnie tak, jak na Twoim screenshocie, i użyję tego samego pliku style.css, którego wcześniej używałeś przy sign‑up.
+Twoje style już mają wszystko, co potrzeba, więc HTML będzie korzystał z tych samych klas.
+
+📄 sign-in.html (dopasowany do screenshota)
+html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sign In</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="signup-container">
+    <h2>Sign In</h2>
+
+    <form>
+        <label>Username:</label>
+        <input type="text" name="username">
+
+        <label>Password:</label>
+        <input type="password" name="password">
+
+        <button type="submit">Sign In</button>
+    </form>
+
+</div>
+
+</body>
+</html>
+🎨 style.css (ten sam plik — nic nie musisz zmieniać)
+Twój wcześniejszy style.css już idealnie pasuje do sign‑in, bo:
+
+zielone tło ✔
+
+biały panel ✔
+
+zielony przycisk ✔
+
+układ pól ✔
+
+Jeśli chcesz, możesz dodać opcjonalnie link na dole (jak w sign‑up), ale na Twoim screenshocie go nie ma, więc zostawiłem czysty panel.
+
+Chcesz, żebym przygotował routing między sign‑in a sign‑up?
+Np.:
+
+sign-in.html → link „Create account”
+
+sign-up.html → link „Already signed in?”
+
+Mogę też zrobić:
+
+wersję z walidacją JS,
+
+wersję z backendem (Flask / FastAPI),
+
+wersję z sesjami i logowaniem użytkownika.
+
+Powiedz tylko, czego potrzebujesz.
+
+a plik style.css jak wyglada ?
+Jasne — poniżej masz pełny plik style.css, dokładnie taki, jaki był używany w Twoim wcześniejszym szablonie sign‑up, i który idealnie pasuje również do sign‑in ze screenshota.
+
+To jest kompletny, gotowy plik, nic nie trzeba zmieniać ani dopisywać.
+
+🎨 style.css (kompletny plik)
+css
+body {
+    background-color: #4CAF50; /* zielone tło */
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.signup-container {
+    background-color: white;
+    padding: 25px 30px;
+    border-radius: 6px;
+    width: 300px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.15);
+}
+
+h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+label {
+    display: block;
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+input {
+    width: 100%;
+    padding: 7px;
+    margin-top: 4px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+button {
+    width: 100%;
+    margin-top: 15px;
+    padding: 10px;
+    background-color: #4CAF50; /* zielony przycisk */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+.bottom-text {
+    margin-top: 15px;
+    font-size: 13px;
+    text-align: center;
+}
+
+.bottom-text a {
+    color: #0066cc;
+    text-decoration: none;
+}
+
+.bottom-text a:hover {
+    text-decoration: underline;
+}
+Dlaczego ten CSS działa dla obu stron?
+✔ zielone tło jak na screenshocie
+✔ biały panel o stałej szerokości
+✔ wycentrowanie w pionie i poziomie
+✔ identyczne pola input
+✔ identyczny zielony przycisk
+✔ nagłówek wyśrodkowany
+✔ opcjonalny tekst na dole (sign‑up ma, sign‑in nie musi)
+
+Twoje sign-in.html i sign-up.html mogą korzystać z tego samego pliku bez żadnych zmian.
+
+Jeśli chcesz, mogę przygotować:
+
+routing między stronami (linki sign‑in ↔ sign‑up),
+
+wersję responsywną (mobile),
+
+wersję z walidacją JS,
+
+backend FastAPI/Flask do logowania i rejestracji.
+
+Powiedz tylko, co dalej.
+
+
+
+w mojej python flask  aplikacji chyba nie widzi pliku style.css
+Twoja aplikacja Flask nie widzi pliku style.css, bo — patrząc na strukturę projektu ze screenshota — najprawdopodobniej:
+
+✔ Flask nie serwuje plików statycznych z właściwego katalogu
+✔ albo w HTML masz zły link do CSS
+✔ albo plik jest w złym miejscu (np. w templates/ zamiast w static/)
+Poniżej masz dokładną diagnozę + poprawne rozwiązanie, krok po kroku.
+
+✅ 1. W Flask pliki statyczne MUSZĄ być w folderze static/
+Twoja struktura wygląda tak:
+
+Code
+gcp-demo/
+    static/
+        style.css   ← tu powinien być
+    templates/
+        sign-in.html
+        sign-up.html
+    main.py
+Jeśli style.css jest w templates/ → Flask go nie zobaczy.
+
+✅ 2. W HTML musisz użyć poprawnego linku do CSS
+W Flask NIE używamy ścieżek typu:
+
+html
+<link rel="stylesheet" href="style.css">
+To nie działa.
+
+Musisz użyć:
+
+html
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+Przykład w Twoim sign-up.html:
+
+html
+<head>
+    <meta charset="UTF-8">
+    <title>Sign Up</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+To jest jedyny poprawny sposób w Flask.
+
+✅ 3. Sprawdź, czy Twój main.py ma poprawną konfigurację
+Minimalny przykład:
+
+python
+from flask import Flask, render_template
+
+app = Flask(__name__)
+
+@app.route("/")
+def signup():
+    return render_template("sign-up.html")
+
+if __name__ == "__main__":
+    app.run(debug=True)
+Flask automatycznie serwuje:
+
+templates/ → HTML
+
+static/ → CSS, JS, obrazki
+
+Nic nie trzeba konfigurować ręcznie.
+
+🔍 4. Najczęstsze błędy (które widzę po Twoim screenshocie)
+❌ CSS w złym folderze
+Plik jest w templates/ zamiast w static/.
+
+❌ Zły link w HTML
+Masz:
+
+html
+<link rel="stylesheet" href="style.css">
+Zamiast:
+
+html
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+❌ Uruchamiasz HTML bez Flask
+Jeśli otwierasz plik HTML bezpośrednio w przeglądarce (file://), CSS nie zadziała.
+
+🟢 5. Jak to naprawić w 30 sekund
+1. Przenieś style.css do folderu:
+Code
+static/style.css
+2. Wstaw do HTML:
+html
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+3. Uruchom Flask:
+Code
+python main.py
+4. Wejdź na:
+Code
+http://127.0.0.1:5000/
+I CSS będzie działać.
+
+Jeśli chcesz, mogę przeanalizować Twój main.py i HTML
+Wklej oba pliki — sprawdzę je i poprawię tak, żeby działały idealnie.
+
+sign-up robie z przegladarki dla metody get, i dziala . Ale sign-in dla post jak mam zrobic z przegladarki ?
+W Flask nie da się wysłać POST‑a z przeglądarki wpisując coś w URL, bo URL zawsze wykonuje GET.
+Dlatego Twój sign‑up działa (bo jest GET), a sign‑in nie — bo próbujesz wywołać POST bez formularza.
+
+Żeby wykonać POST z przeglądarki, musisz:
+
+✔️ wejść na stronę z formularzem
+✔️ kliknąć przycisk „Sign In”, który wysyła POST
+Czyli:
+
+GET służy do wyświetlania strony
+
+POST służy do wysyłania danych z formularza
+
+🔥 Jak to działa w Flask
+1. Routing w main.py
+python
+from flask import Flask, render_template, request
+
+app = Flask(__name__)
+
+@app.route("/sign-in", methods=["GET", "POST"])
+def sign_in():
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+        return f"Zalogowano jako: {username}"
+    return render_template("sign-in.html")
+
+if __name__ == "__main__":
+    app.run(debug=True)
+2. Formularz w sign-in.html
+Twój HTML musi mieć method="POST" i action="/sign-in":
+
+html
+<form action="/sign-in" method="POST">
+    <label>Username:</label>
+    <input type="text" name="username">
+
+    <label>Password:</label>
+    <input type="password" name="password">
+
+    <button type="submit">Sign In</button>
+</form>
+3. Jak wywołać POST z przeglądarki?
+✔️ Wejdź na:
+Code
+http://127.0.0.1:5000/sign-in
+✔️ Wypełnij formularz
+✔️ Kliknij Sign In
+To wyśle POST do /sign-in.
+
+❌ Czego NIE da się zrobić?
+Nie da się wykonać POST przez:
+
+wpisanie URL w przeglądarce
+
+odświeżenie strony
+
+kliknięcie linku <a href="">
+
+Bo wszystkie te akcje wykonują GET.
+
+🟢 Jeśli chcesz testować POST bez formularza
+Możesz użyć:
+
+Postman
+
+curl
+
+VS Code REST Client
+
+Thunder Client (VS Code extension)
+
+Przykład curl:
+
+bash
+curl -X POST -F "username=mario" -F "password=123" http://127.0.0.1:5000/sign-in
+Jeśli chcesz, mogę:
+poprawić Twój main.py,
+
+zrobić pełny system logowania (sesje, cookies),
+
+zrobić przekierowania po zalogowaniu,
+
+zrobić walidację formularza.
+
+Powiedz tylko, co dalej.
+
+gdzie wkleic forme sign-in ? mozesz podac caly szablon ?
+Jasne — poniżej masz kompletny, gotowy szablon sign-in.html, z poprawnie wklejonym formularzem POST, tak aby działał w Flask po wejściu z przeglądarki na /sign-in.
+
+To jest dokładnie to, czego teraz potrzebujesz: pełny plik HTML, który możesz wkleić do folderu templates/.
+
+📄 sign-in.html (kompletny, gotowy do użycia)
+html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sign In</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="signup-container">
+    <h2>Sign In</h2>
+
+    <!-- TU JEST FORMULARZ POST -->
+    <form action="/sign-in" method="POST">
+        <label>Username:</label>
+        <input type="text" name="username">
+
+        <label>Password:</label>
+        <input type="password" name="password">
+
+        <button type="submit">Sign In</button>
+    </form>
+
+</div>
+
+</body>
+</html>
+Jak to działa?
+✔ Wejście z przeglądarki:
+Code
+http://127.0.0.1:5000/sign-in
+Flask wykona GET i wyświetli ten szablon.
+
+✔ Kliknięcie „Sign In”
+Formularz wysyła POST na /sign-in.
+
+Twój main.py musi wyglądać tak:
+python
+from flask import Flask, render_template, request
+
+app = Flask(__name__)
+
+@app.route("/sign-in", methods=["GET", "POST"])
+def sign_in():
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+        return f"Zalogowano jako: {username}"
+    return render_template("sign-in.html")
+
+@app.route("/sign-up", methods=["GET"])
+def sign_up():
+    return render_template("sign-up.html")
+
+if __name__ == "__main__":
+    app.run(debug=True)
+Gdzie wkleić ten plik?
+Struktura projektu musi wyglądać tak:
+
+Code
+gcp-demo/
+│
+├── static/
+│   └── style.css
+│
+├── templates/
+│   ├── sign-in.html   ← TU WKLEJASZ TEN PLIK
+│   └── sign-up.html
+│
+└── main.py
+Jeśli chcesz, mogę:
+dodać przekierowanie po zalogowaniu,
+
+zrobić obsługę błędów (złe hasło),
+
+zrobić sesje i cookies,
+
+połączyć logowanie z bazą PostgreSQL.
+
+Powiedz tylko, co dalej.
+
+czyli z url nie mozemy wywolac post bo zawsze robimy get w przegladarce ,z kolei post z przegladarki robimy tylko z formy po kliknieciu submit ?
+Dokładnie tak — rozumiesz to już poprawnie.
+W przeglądarce działa to zawsze w ten sposób:
+
+🔵 1. Wpisanie URL w przeglądarce = zawsze GET
+Niezależnie od tego, co wpiszesz:
+
+Code
+http://127.0.0.1:5000/sign-in
+przeglądarka zawsze wykona:
+
+Code
+GET /sign-in
+Bo przeglądarka nie ma mechanizmu wysyłania POST przy wpisywaniu adresu.
+
+🟢 2. POST z przeglądarki można wykonać tylko przez:
+✔ kliknięcie przycisku w formularzu <form method="POST">
+✔ wysłanie formularza JS (fetch / XMLHttpRequest)
+✔ narzędzia zewnętrzne (Postman, curl, Thunder Client)
+Ale nie przez wpisanie adresu w pasku URL.
+
+🔥 3. Dlaczego tak jest?
+Bo protokół HTTP definiuje:
+
+GET — pobieranie zasobów (stron)
+
+POST — wysyłanie danych (formularze)
+
+Przeglądarka przy wpisaniu adresu zawsze pobiera stronę, więc używa GET.
+
+🟩 4. Jak to wygląda w Flask?
+Twój routing:
+python
+@app.route("/sign-in", methods=["GET", "POST"])
+def sign_in():
+    if request.method == "POST":
+        ...
+    return render_template("sign-in.html")
+Co się dzieje?
+Wejście na /sign-in → GET → wyświetla formularz
+
+Kliknięcie „Sign In” → POST → Flask odbiera dane
+
+🟣 5. Podsumowanie — krótko i konkretnie
+✔ URL → zawsze GET
+✔ POST → tylko z formularza lub JS
+✔ Flask obsługuje oba, ale przeglądarka sama z siebie POST nie wywoła
+Jeśli chcesz, mogę Ci pokazać:
+
+jak zrobić przekierowanie po POST,
+
+jak zrobić walidację loginu,
+
+jak zrobić sesje i cookies (prawdziwe logowanie),
+
+jak połączyć to z bazą PostgreSQL.
+
+Powiedz, w którą stronę idziemy dalej.
+
+a jak to bedzie z patch,  delete czy put ?
+Tak — dokładnie tak samo jak z POST.
+W przeglądarce nie da się bezpośrednio wywołać PUT, PATCH ani DELETE przez wpisanie URL, bo:
+
+👉 wpisanie adresu w przeglądarce = zawsze GET
+👉 kliknięcie linku <a> = zawsze GET
+Przeglądarka nie ma mechanizmu, żeby wysłać PUT/PATCH/DELETE bez formularza lub JavaScriptu.
+
+🔥 Jak to działa dla PUT / PATCH / DELETE?
+1. Formularz HTML nie obsługuje PUT/PATCH/DELETE
+HTML <form> obsługuje tylko:
+
+GET
+
+POST
+
+Nic więcej.
+
+Dlatego:
+
+html
+<form method="PUT">   <!-- to nie działa -->
+nie zadziała nigdy.
+
+🟢 2. Jak wysłać PUT/PATCH/DELETE z przeglądarki?
+Masz 3 możliwości:
+
+✔ 1. JavaScript (fetch API)
+Najczęściej używane.
+
+Przykład PUT:
+
+html
+<script>
+function sendPut() {
+    fetch("/update", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: "mario" })
+    });
+}
+</script>
+
+<button onclick="sendPut()">Wyślij PUT</button>
+PATCH:
+
+js
+fetch("/update", { method: "PATCH", ... })
+DELETE:
+
+js
+fetch("/delete/123", { method: "DELETE" })
+✔ 2. Narzędzia zewnętrzne
+Postman
+
+curl
+
+Thunder Client (VS Code)
+
+Insomnia
+
+Przykład curl:
+
+bash
+curl -X PUT -d "username=mario" http://127.0.0.1:5000/update
+✔ 3. Ukryty POST + override (Flask, Django, Rails)
+Niektóre frameworki pozwalają wysłać PUT/PATCH/DELETE przez POST z dodatkowym parametrem:
+
+html
+<form action="/update" method="POST">
+    <input type="hidden" name="_method" value="PUT">
+    <button type="submit">Wyślij PUT</button>
+</form>
+Ale Flask domyślnie tego nie wspiera — trzeba użyć dodatkowych bibliotek.
+
+🔵 Jak to wygląda w Flask?
+Przykład obsługi PUT:
+
+python
+@app.route("/update", methods=["PUT"])
+def update():
+    data = request.get_json()
+    return "OK"
+PATCH:
+
+python
+@app.route("/update", methods=["PATCH"])
+def patch():
+    ...
+DELETE:
+
+python
+@app.route("/delete/<id>", methods=["DELETE"])
+def delete(id):
+    ...
+🟣 Podsumowanie
+✔ GET — zawsze z URL
+✔ POST — tylko z formularza lub JS
+✔ PUT — tylko z JS lub narzędzi zewnętrznych
+✔ PATCH — tylko z JS lub narzędzi zewnętrznych
+✔ DELETE — tylko z JS lub narzędzi zewnętrznych
+Przeglądarka nie ma przycisku ani mechanizmu, żeby wysłać PUT/PATCH/DELETE bezpośrednio.
+
+Jeśli chcesz, mogę Ci przygotować:
+
+gotowy panel HTML z przyciskami PUT/PATCH/DELETE
+
+pełny backend Flask do CRUD (Create/Read/Update/Delete)
+
+przykład API REST z fetch()
+
+albo wersję z AJAX/axios
+
+Powiedz, w którą stronę idziemy dalej.
+----------------------
+GLOUDE INIT
+
+https://accounts.google.com/o/oauth2/auth?response_type=code&client_id=32555940559.apps.googleusercontent.com&redirect_uri=http%3A%2F%2Flocalhost%3A8085%2F&scope=openid+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcloud-platform+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fappengine.admin+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fsqlservice.login+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcompute+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Faccounts.reauth&state=9rCR0MXtwR9kyKE3lJDaHJVRqiz75o&access_type=offline&code_challenge=We3pDG0B2JOQ0a7qd1Dsi7If0CnGTUv1D7UGBTeDWy4&code_challenge_method=S256
+
+
+-------------------------------------------------
+
+GCLOUD LOGIN
+gcloud auth login
+
+----------------------------

@@ -1,0 +1,26 @@
+kubectl  get secret creds -o yaml
+helm repo add jetstack https://charts.jetstack.io
+helm repo update
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm install my-ingress-nginx ingress-nginx/ingress-nginx
+helm ls 
+
+Co ta instalacja zrobi w Twoim klastrze GKE?
+utworzy namespace ingress-nginx (jeśli go nie ma)
+
+utworzy Deployment ingress-nginx-controller
+
+utworzy Service typu LoadBalancer
+
+Google Cloud przydzieli zewnętrzny publiczny adres IP
+
+klaster będzie mógł obsługiwać Ingress (routing HTTP/HTTPS)
+
+cert-manager będzie mógł wystawiać certyfikaty Let’s Encrypt
+
+Bez tego Ingress nie działa.
+
+
+--------------------\n
+kubectl create secret generic flask-secret --from-literal=secret-key=00c4bf2f362fc4ca2cee832f78afa1dc09a7b14abf9fc25a89a6b57633cd5ca0

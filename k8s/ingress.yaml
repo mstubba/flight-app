@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: flight-app-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-http
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - flight-app.davimast.net
+    secretName: flight-app-tls
+  rules:
+  - host: flight-app.davimast.net
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: flask-app
+            port:
+              number: 5000

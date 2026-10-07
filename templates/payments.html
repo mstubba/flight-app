@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Payment Information</title>
+    <style>
+        body {
+            background-color: #4CAF50;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 380px;
+            margin: 80px auto;
+            background: #ffffff;
+            padding: 25px 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        h1 {
+            font-size: 22px;
+            margin: 0 0 20px 0;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            margin-bottom: 5px;
+            text-align: left;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .row .form-group {
+            flex: 1;
+        }
+
+        .submit-btn {
+            width: 100%;
+            margin-top: 15px;
+            background-color: #4CAF50;
+            color: #ffffff;
+            border: none;
+            padding: 10px 0;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .submit-btn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Payment Information</h1>
+    <form action="https://flightapp.davimast.net/process-payment" method="POST">
+        <div class="form-group">
+            <label for="name">Name on Card</label>
+            <input type="text" id="name" name="card_name" required>
+        </div>
+
+        <div class="form-group">
+            <label for="number">Card Number</label>
+            <input type="text" id="number" name="card_number" required>
+        </div>
+
+        <div class="row">
+            <div class="form-group">
+                <label for="exp">Expiration Date</label>
+                <input type="text" id="exp" name="expiration" placeholder="MM/YY" required>
+            </div>
+            <div class="form-group">
+                <label for="cvv">CVV</label>
+                <input type="text" id="cvv" name="cvv" required>
+            </div>
+        </div>
+
+        <button type="submit" class="submit-btn">Submit Payment</button>
+    </form>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Shop – Tickets</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #0f3b2f; /* ciemna zieleń */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            color: #ffffff;
+        }
+
+        h1 {
+            margin-top: 40px;
+            margin-bottom: 40px;
+            font-size: 32px;
+            font-weight: 600;
+        }
+
+        .container {
+            display: flex;
+            gap: 40px;
+            padding: 20px;
+        }
+
+        .card {
+            background-color: #ffffff;
+            color: #000000;
+            width: 320px;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .card h2 {
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 10px 0;
+            margin-top: 8px;
+            background-color: #1f7a4c; /* zielony przycisk */
+            color: #ffffff;
+            border: none;
+            border-radius: 4px;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background-color: #17603a;
+        }
+
+        @media (max-width: 720px) {
+            .container {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Hello {{name}}</h1>
+
+    <div class="container">
+        <!-- Delete Ticket -->
+        <div class="card">
+            <h2>Delete Ticket</h2>
+            <form action="https://flightapp.davimast.net/ticket" method="post">
+                <div class="form-group">
+                    <label for="delete-departure">Departure:</label>
+                    <input id="delete-departure" name="departure" type="text" placeholder="where to..">
+                </div>
+                <div class="form-group">
+                    <label for="delete-arrival">Arrival:</label>
+                    <input id="delete-arrival" name="arrival" type="text" placeholder="where to..">
+                </div>
+                <button class="btn" type="submit">Search Ticket</button>
+            </form>
+        </div>
+
+        <!-- Buy Ticket -->
+        <div class="card">
+            <h2>Buy Ticket</h2>
+            <form action="https://flightapp.davimast.net/ticket" method="post">
+                <div class="form-group">
+                    <label for="buy-departure">Departure:</label>
+                    <input id="buy-departure" name="departure" type="text" placeholder="from where ..">
+                </div>
+                <div class="form-group">
+                    <label for="buy-arrival">Arrival:</label>
+                    <input id="buy-arrival" name="buy-arrival" type="text" placeholder="where to..">
+                </div>
+                <button class="btn" type="submit">Search Ticket</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

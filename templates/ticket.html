@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Flights</title>
+    <style>
+        body {
+            background-color: #4CAF50;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 60%;
+            margin: 60px auto;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        /* --- TABELA BEZ UCINANIA --- */
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto; /* zamiast hidden */
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            margin-bottom: 25px;
+        }
+
+        table {
+            width: 100%;
+            min-width: 600px; /* zapobiega ściskaniu kolumn */
+            border-collapse: collapse;
+            table-layout: fixed; /* stabilne szerokości */
+        }
+
+        th, td {
+            padding: 12px;
+            border: 1px solid #ccc;
+            word-wrap: break-word; /* nic nie wypycha tabeli */
+        }
+
+        th {
+            background-color: #f7f7f7;
+            font-weight: bold;
+        }
+
+        .submit {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .submit:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+{% if action == 'buy' %}
+<div class="container">
+    <h1>Flights</h1>
+
+    <form action="https://flightapp.davimast.net/payment" method="POST">
+
+        <div class="table-wrapper">
+            <table>
+                <tr>
+                    <th>departure</th>
+                    <th>destination</th>
+                    <th>departure-time</th>
+                    <th>arrival-time</th>
+                    <th>price</th>
+                </tr>
+
+                <tr>
+                    <td>{{ flight["departure"] }}</td>
+                    <td>{{ flight["destination"] }}</td>
+                    <td>{{ flight.departure_time }}</td>
+                    <td>{{ flight.arrival_time }}</td>
+                    <td>{{ flight.price }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <button class="submit">Purchase</button>
+    </form>
+</div>
+{% endif %}
+</body>
+</html>

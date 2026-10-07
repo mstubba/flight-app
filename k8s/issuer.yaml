@@ -1,0 +1,15 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-dns
+spec:
+  acme:
+    email: mariuszstubbagcp@gmail.com
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: letsencrypt-dns-key
+    solvers:
+    - dns01:
+        cloudDNS:
+          project: devops-project-387209
+          hostedZoneName: flightapp-zone
