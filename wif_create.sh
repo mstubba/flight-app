@@ -1,5 +1,5 @@
 PROJECT_ID="devops-project-510219"
-REPO="mstubba/gcp-demo-prjs"
+REPO="mstubba/flight-app"
 SA="github-deployer"
 SA_EMAIL="$SA@$PROJECT_ID.iam.gserviceaccount.com"
 
