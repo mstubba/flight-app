@@ -1,0 +1,44 @@
+name: pipeline
+
+on:
+  push:
+    branches:
+      - 'main'
+
+jobs:
+  application:
+    name: build-and-deploy
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Wczytaj konfigurację z gcp.env
+        run: cat gcp.env >> "$GITHUB_ENV"
+
+      - name: Build Docker image
+        run: |
+          IMAGE="$AR_REGION-docker.pkg.dev/$PROJECT_ID/$AR_REPO/$IMAGE_NAME"
+          docker build -t "$IMAGE:$GITHUB_SHA" -t "$IMAGE:latest" .
+          echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.SERVICE_ACCOUNT }}
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v3
+        with:
+          cluster_name: ${{ env.CLUSTER_NAME }}
+          location: ${{ env.CLUSTER_ZONE }}
+
+      - name: Test - dostęp do klastra
+        run: kubectl get nodes

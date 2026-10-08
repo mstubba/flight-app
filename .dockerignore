@@ -1,7 +1,11 @@
 .git
-k8s/
+.github
+terraform
+k8s
+gha-creds-*.json
+gha-kubeconfig-*
 __pycache__/
 *.pyc
-.venv/
+.venv
 .env
 secrets/

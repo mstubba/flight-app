@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: flask-app
-        image: mariuszstubba/flight-app:v1.1.2
+        image: europe-central2-docker.pkg.dev/devops-project-510219/flight-app/flight-app:latest
         ports:
         - containerPort: 5000
         env:
@@ -48,5 +48,3 @@ spec:
           httpGet:
             path: /health
             port: 5000
-      imagePullSecrets:
-      - name: regcred
