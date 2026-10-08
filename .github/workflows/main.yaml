@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - 'main'
+  workflow_dispatch:
 
 jobs:
   application:
@@ -34,11 +35,24 @@ jobs:
           workload_identity_provider: ${{ env.WIF_PROVIDER }}
           service_account: ${{ env.SERVICE_ACCOUNT }}
 
+      - name: Push image to Artifact Registry
+        run: |
+          gcloud auth configure-docker "$AR_REGION-docker.pkg.dev" --quiet
+          docker push "$IMAGE:$GITHUB_SHA"
+          docker push "$IMAGE:latest"
+
       - name: Get GKE credentials
         uses: google-github-actions/get-gke-credentials@v3
         with:
           cluster_name: ${{ env.CLUSTER_NAME }}
           location: ${{ env.CLUSTER_ZONE }}
 
-      - name: Test - dostęp do klastra
-        run: kubectl get nodes
+      - name: Deploy to GKE
+        run: |
+          sed -i "s|$IMAGE:latest|$IMAGE:$GITHUB_SHA|" k8s/flask.yaml
+          grep -q "$IMAGE:$GITHUB_SHA" k8s/flask.yaml \
+            || { echo "::error::W k8s/flask.yaml nie znaleziono $IMAGE:latest"; exit 1; }
+          kubectl apply -f k8s/
+          kubectl annotate deployment/"$DEPLOYMENT_NAME" \
+            kubernetes.io/change-cause="commit $GITHUB_SHA" --overwrite
+          kubectl rollout status deployment/"$DEPLOYMENT_NAME" --timeout=180s
